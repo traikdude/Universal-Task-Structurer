@@ -16,6 +16,8 @@ import { HistoryPanel, HistoryEntry } from './components/HistoryPanel';
 import { ExportDropdown } from './components/ExportDropdown';
 import { generateCSV, generatePlainText } from './lib/utils';
 import { useTaskHistory } from './hooks/useTaskHistory';
+import { useGoogleLogin, googleLogout } from '@react-oauth/google';
+import { fetchTaskLists, createTaskList, insertTask } from './services/googleTasks';
 
 const MIN_CHARS = 15;
 const MAX_CHARS = 100000;
@@ -85,8 +87,24 @@ export default function App() {
   const [sentSuccess, setSentSuccess] = useState(false);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [accessToken, setAccessToken] = useState<string | null>(localStorage.getItem('google_access_token'));
 
   const [history, setHistory] = useState<HistoryEntry[]>([]);
+
+  const login = useGoogleLogin({
+    scope: 'https://www.googleapis.com/auth/tasks',
+    onSuccess: (tokenResponse) => {
+        setAccessToken(tokenResponse.access_token);
+        localStorage.setItem('google_access_token', tokenResponse.access_token);
+    },
+    onError: (error) => console.log('Login Failed:', error)
+  });
+
+  const handleLogout = () => {
+    googleLogout();
+    setAccessToken(null);
+    localStorage.removeItem('google_access_token');
+  };
 
   // Draft auto-save
   const draftRef = useRef('');
@@ -268,13 +286,38 @@ export default function App() {
   };
 
   const handleSendToTasks = async (listId: string) => {
+    if (!accessToken) {
+        login();
+        return;
+    }
+    
+    const selectedTasks = tasks.filter(t => t.isSelected);
+    if (selectedTasks.length === 0) return;
+    
     setIsSending(true);
-    // Mocking API call to Google Tasks
-    setTimeout(() => {
-      setIsSending(false);
+    try {
+      // Find or create the target list
+      const realLists = await fetchTaskLists(accessToken);
+      let targetList = realLists.find((l: any) => l.title.toLowerCase() === listId.toLowerCase());
+      
+      if (!targetList) {
+          targetList = await createTaskList(accessToken, listId);
+      }
+      
+      // Insert tasks into target list sequentially
+      for (const t of selectedTasks) {
+          await insertTask(accessToken, targetList.id, t);
+      }
+      
       setSentSuccess(true);
       setTimeout(() => setSentSuccess(false), 3000);
-    }, 1500);
+    } catch (e) {
+      console.error(e);
+      alert('Failed to send to Google Tasks. Your session may have expired.');
+      handleLogout();
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleUpdateTask = (id: string, updates: Partial<Task>) => {
@@ -396,6 +439,15 @@ export default function App() {
           </div>
         </div>
         <div className="flex items-center gap-4">
+          {accessToken ? (
+            <button onClick={handleLogout} className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">
+              Sign Out
+            </button>
+          ) : (
+            <button onClick={() => login()} className="text-sm bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-4 py-1.5 rounded-full font-medium hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors shadow-sm">
+              Connect Google Tasks
+            </button>
+          )}
           <button
             onClick={() => setIsDarkMode(!isDarkMode)}
             className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors"
