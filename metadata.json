@@ -1,5 +1,5 @@
 {
   "name": "Universal Task Structurer",
   "description": "Transform any text or image into a structured Google Task",
-  "requestFramePermissions": []
+  "requestFramePermissions": ["microphone"]
 }

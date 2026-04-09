@@ -9,6 +9,8 @@ import { cn } from './lib/utils';
 import { ExampleChips } from './components/ExampleChips';
 import { TaskListSelector } from './components/TaskListSelector';
 import { MultiFileUpload } from './components/MultiFileUpload';
+import { UrlInput } from './components/UrlInput';
+import { VoiceInput } from './components/VoiceInput';
 import { TaskCard, Task } from './components/TaskCard';
 import { HistoryPanel, HistoryEntry } from './components/HistoryPanel';
 import { ExportDropdown } from './components/ExportDropdown';
@@ -435,10 +437,20 @@ export default function App() {
                   setInput(prev => prev + text);
                 }}
               />
+              <UrlInput 
+                onContentExtracted={(text) => {
+                  setInput(prev => prev + text);
+                }}
+              />
             </div>
 
             <div className="p-3 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-3">
-              <div className="flex items-center gap-2 text-xs">
+              <div className="flex items-center gap-3 text-xs">
+                <VoiceInput 
+                  onTranscript={(text) => {
+                    setInput(prev => prev + (prev && !prev.endsWith(' ') ? ' ' : '') + text);
+                  }}
+                />
                 <span className={cn(
                   "font-medium",
                   isTooLong ? "text-red-500" : inputLength > MAX_CHARS * 0.9 ? "text-amber-500" : "text-gray-400"
