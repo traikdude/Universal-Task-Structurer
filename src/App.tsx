@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import confetti from 'canvas-confetti';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { processTaskStream } from './services/gemini';
+import { processTaskStream, GeminiApiError } from './services/gemini';
 import { cn } from './lib/utils';
 import { ExampleChips } from './components/ExampleChips';
 import { TaskListSelector } from './components/TaskListSelector';
@@ -146,9 +146,11 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [undo, redo]);
 
-  // Confetti effect
+  // Confetti effect — with proper interval cleanup to prevent leaks
   const prevIsProcessing = useRef(isProcessing);
   useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | null = null;
+
     if (prevIsProcessing.current && !isProcessing && tasks.length > 0) {
       const duration = 3 * 1000;
       const animationEnd = Date.now() + duration;
@@ -156,18 +158,19 @@ export default function App() {
 
       const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
 
-      const interval: any = setInterval(function() {
+      interval = setInterval(function() {
         const timeLeft = animationEnd - Date.now();
 
         if (timeLeft <= 0) {
-          return clearInterval(interval);
+          if (interval) clearInterval(interval);
+          return;
         }
 
         const particleCount = 50 * (timeLeft / duration);
         confetti({
           ...defaults, particleCount,
           origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
-          colors: ['#14b8a6', '#f97316', '#22c55e'] // teal, orange, green
+          colors: ['#14b8a6', '#f97316', '#22c55e']
         });
         confetti({
           ...defaults, particleCount,
@@ -177,6 +180,11 @@ export default function App() {
       }, 250);
     }
     prevIsProcessing.current = isProcessing;
+
+    // Cleanup: clear the interval if the component unmounts during animation
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [isProcessing, tasks.length]);
 
   const handleProcess = async () => {
@@ -230,9 +238,16 @@ export default function App() {
           return newHistory.slice(0, 5); // Keep only last 5
         });
       }
-    } catch (err) {
-      setError('Gemini couldn\'t process your request right now. This might be a temporary issue—please try again in a moment.');
-      console.error(err);
+    } catch (err: any) {
+      // Surface structured error details instead of a generic message
+      if (err instanceof GeminiApiError) {
+        const modelInfo = err.model ? ` (model: ${err.model})` : '';
+        const statusInfo = err.status ? ` [${err.status}]` : '';
+        setError(`${err.message}${modelInfo}${statusInfo}`);
+      } else {
+        setError('Gemini couldn\'t process your request right now. This might be a temporary issue—please try again in a moment.');
+      }
+      console.error('[App] Task processing error:', err);
     } finally {
       setIsProcessing(false);
       setStreamingContent('');
@@ -311,10 +326,15 @@ export default function App() {
       
       setSentSuccess(true);
       setTimeout(() => setSentSuccess(false), 3000);
-    } catch (e) {
-      console.error(e);
-      alert('Failed to send to Google Tasks. Your session may have expired.');
-      handleLogout();
+    } catch (e: any) {
+      console.error('[App] Google Tasks error:', e);
+      // Only force logout on 401 (token expired), not on other errors
+      if (e?.status === 401) {
+        alert('Your Google session has expired. Please sign in again.');
+        handleLogout();
+      } else {
+        alert(`Failed to send to Google Tasks: ${e?.message || 'Unknown error'}`);
+      }
     } finally {
       setIsSending(false);
     }

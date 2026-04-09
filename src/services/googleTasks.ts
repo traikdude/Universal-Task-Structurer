@@ -1,54 +1,127 @@
+/**
+ * Google Tasks API service.
+ *
+ * Provides typed helpers for listing, creating, and inserting tasks
+ * via the REST v1 API using an OAuth2 access token.
+ */
+
 const BASE_URL = 'https://tasks.googleapis.com/tasks/v1';
+
+// ── Types ──────────────────────────────────────────────────────
 
 export interface TaskList {
   id: string;
   title: string;
 }
 
+export interface GoogleTaskPayload {
+  title: string;
+  notes?: string;
+  due?: string;     // ISO 8601 date-time string
+  status?: string;  // 'needsAction' | 'completed'
+}
+
+export interface InsertableTask {
+  title: string;
+  dueDate?: string;
+  rawContent?: string;
+}
+
+// ── Error helpers ──────────────────────────────────────────────
+
+/**
+ * Checks the response status and throws with the API error body
+ * when the request fails. Returns a structured message so callers
+ * can differentiate 401 (expired token) from other failures.
+ */
+async function assertOk(res: Response, context: string): Promise<void> {
+  if (res.ok) return;
+
+  let detail = '';
+  try {
+    const body = await res.json();
+    detail = body?.error?.message ?? JSON.stringify(body);
+  } catch {
+    detail = res.statusText;
+  }
+
+  const err = new Error(`[Google Tasks] ${context}: ${res.status} — ${detail}`);
+  (err as any).status = res.status;
+  throw err;
+}
+
+// ── API functions ──────────────────────────────────────────────
+
+/**
+ * Fetches all task lists for the authenticated user.
+ */
 export const fetchTaskLists = async (accessToken: string): Promise<TaskList[]> => {
   const res = await fetch(`${BASE_URL}/users/@me/lists`, {
     headers: { Authorization: `Bearer ${accessToken}` }
   });
-  if (!res.ok) throw new Error('Failed to fetch lists');
+  await assertOk(res, 'Failed to fetch task lists');
   const data = await res.json();
-  return data.items || [];
+  return data.items ?? [];
 };
 
+/**
+ * Creates a new task list with the given title.
+ */
 export const createTaskList = async (accessToken: string, title: string): Promise<TaskList> => {
   const res = await fetch(`${BASE_URL}/users/@me/lists`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify({ title })
   });
-  if (!res.ok) throw new Error('Failed to create list');
+  await assertOk(res, `Failed to create list "${title}"`);
   return res.json();
 };
 
-export const insertTask = async (accessToken: string, listId: string, task: any) => {
-  // Try to parse out the due date if it exists
-  let due = undefined;
+/**
+ * Inserts a single task into the specified list.
+ *
+ * Converts the app's internal task shape into the Google Tasks API payload,
+ * handling date normalization defensively.
+ */
+export const insertTask = async (
+  accessToken: string,
+  listId: string,
+  task: InsertableTask
+): Promise<any> => {
+  // Normalize due date to ISO 8601 format required by Google Tasks
+  let due: string | undefined;
   if (task.dueDate) {
     try {
-      // Google Tasks requires ISO 8601 format, e.g. 2026-04-09T00:00:00.000Z
-      const dateStr = task.dueDate.includes('T') ? task.dueDate : `${task.dueDate}T12:00:00.000Z`;
-      due = new Date(dateStr).toISOString();
-    } catch (e) {
-      console.warn("Could not parse due date", task.dueDate);
+      const dateStr = task.dueDate.includes('T')
+        ? task.dueDate
+        : `${task.dueDate}T12:00:00.000Z`;
+      const parsed = new Date(dateStr);
+      if (!isNaN(parsed.getTime())) {
+        due = parsed.toISOString();
+      }
+    } catch {
+      console.warn('[Google Tasks] Could not parse due date:', task.dueDate);
     }
   }
 
-  const payload = {
+  const payload: GoogleTaskPayload = {
     title: task.title,
     notes: task.rawContent,
-    due: due
+    due,
   };
 
   const res = await fetch(`${BASE_URL}/lists/${listId}/tasks`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify(payload)
   });
-  
-  if (!res.ok) throw new Error('Failed to insert task');
+
+  await assertOk(res, `Failed to insert task "${task.title}"`);
   return res.json();
 };
