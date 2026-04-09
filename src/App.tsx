@@ -311,17 +311,10 @@ export default function App() {
     
     setIsSending(true);
     try {
-      // Find or create the target list
-      const realLists = await fetchTaskLists(accessToken);
-      let targetList = realLists.find((l: any) => l.title.toLowerCase() === listId.toLowerCase());
-      
-      if (!targetList) {
-          targetList = await createTaskList(accessToken, listId);
-      }
-      
-      // Insert tasks into target list sequentially
+      // The listId is now a real Google Tasks list ID managed directly by TaskListSelector.
+      // We iterate over the selected tasks and push them directly to Google.
       for (const t of selectedTasks) {
-          await insertTask(accessToken, targetList.id, t);
+          await insertTask(accessToken, listId, t);
       }
       
       setSentSuccess(true);
@@ -599,6 +592,7 @@ export default function App() {
                   selectedCount={selectedCount} 
                   totalCount={tasks.length} 
                   suggestedListTitle={tasks[0]?.suggestedList}
+                  accessToken={accessToken}
                 />
                 {sentSuccess && <span className="text-xs text-green-600 font-medium flex items-center gap-1"><Check className="w-3 h-3" /> Sent!</span>}
                 <ExportDropdown 
