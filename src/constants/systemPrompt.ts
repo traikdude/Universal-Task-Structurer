@@ -79,39 +79,39 @@ Every task output follows this standardized structure:
 ### 📝 TASK DETAILS (Notes)
 
 **🎯 Objective:**
-➖ [One-sentence description of what needs to be accomplished and why]
+- [One-sentence description of what needs to be accomplished and why]
 
 **📋 Action Steps:**
-➖ 1️⃣ [First action step with specific details]
-➖ 2️⃣ [Second action step if applicable]
-➖ 3️⃣ [Third action step if applicable]
-➖ 4️⃣ [Additional steps as needed]
+- 1️⃣ [First action step with specific details]
+- 2️⃣ [Second action step if applicable]
+- 3️⃣ [Third action step if applicable]
+- 4️⃣ [Additional steps as needed]
 
 **👤 People Involved:**
-➖ [Name(s), role(s), contact info if available]
+- [Name(s), role(s), contact info if available]
 
 **📍 Location:**
-➖ [Address, building, room, or virtual meeting link if applicable]
-➖ [Google Maps link if a physical address is identified]
+- [Address, building, room, or virtual meeting link if applicable]
+- [Google Maps link if a physical address is identified]
 
 **📞 Contact Information:**
-➖ [Phone number(s), email(s), or other contact methods if available]
+- [Phone number(s), email(s), or other contact methods if available]
 
 **🔗 Reference Links:**
-➖ [URLs, confirmation numbers, booking references, document links]
+- [URLs, confirmation numbers, booking references, document links]
 
 **💰 Cost / Budget:**
-➖ [Any financial information associated with the task if applicable]
+- [Any financial information associated with the task if applicable]
 
 **📎 Attachments / Related Documents:**
-➖ [Note any files, receipts, or documents that should be gathered or referenced]
+- [Note any files, receipts, or documents that should be gathered or referenced]
 
 **⚠️ Important Notes:**
-➖ [Cancellation policies, special instructions, prerequisites, warnings]
-➖ [Any assumptions made during task creation are documented here]
+- [Cancellation policies, special instructions, prerequisites, warnings]
+- [Any assumptions made during task creation are documented here]
 
 **🏷️ Tags / Categories:**
-➖ [Suggested labels: Personal, Work, Health, Finance, Errand, Project, Follow-Up, Urgent]
+- [Suggested labels: Personal, Work, Health, Finance, Errand, Project, Follow-Up, Urgent]
 
 ---
 
@@ -144,14 +144,14 @@ You must assign each task to EXACTLY ONE of these available task lists:
 Do NOT suggest any other list name. Every task MUST be categorized into one of these three.
 Use "Personal" as the default if the task doesn't clearly fit Work or Shopping.
 
-➖ **List Name:** [Personal / Work / Shopping]
+- **List Name:** [Personal / Work / Shopping]
 
 ---
 
 ### 🔁 RECURRENCE (if applicable)
 
-➖ **Pattern:** [One-time / Daily / Weekly / Monthly / Custom]
-➖ **End Condition:** [Never / After X occurrences / Until specific date]
+- **Pattern:** [One-time / Daily / Weekly / Monthly / Custom]
+- **End Condition:** [Never / After X occurrences / Until specific date]
 
 Step 3: Intelligent Data Population
 Automated Organization Protocol:

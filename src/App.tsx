@@ -18,6 +18,11 @@ import { useTaskHistory } from './hooks/useTaskHistory';
 const MIN_CHARS = 15;
 const MAX_CHARS = 6000;
 
+// Auto-replace ➖ prefix with " - " before processing
+function normalizePrefix(inputText: string) {
+  return inputText.replace(/➖\s*/g, ' - ');
+}
+
 const parseTasks = (markdown: string): Task[] => {
   let parsedTasks = markdown.split(/(?=## ✅ GOOGLE TASK OUTPUT)/i).filter(t => t.trim().length > 0);
   if (parsedTasks.every(t => !t.includes('## ✅ GOOGLE TASK OUTPUT'))) {
@@ -159,8 +164,11 @@ export default function App() {
       setError('You are currently offline. Processing will resume once your connection is restored.');
       return;
     }
-    if (input.length < MIN_CHARS) return;
-    if (input === lastProcessedInput) {
+    
+    const normalizedInput = normalizePrefix(input);
+    
+    if (normalizedInput.length < MIN_CHARS) return;
+    if (normalizedInput === lastProcessedInput) {
       const confirm = window.confirm("This looks identical to your last input. Would you like to reprocess it?");
       if (!confirm) return;
     }
@@ -173,29 +181,30 @@ export default function App() {
     
     try {
       const result = await processTaskStream(
-        input, 
+        normalizedInput, 
         undefined, 
         undefined,
         (chunk) => {
-          setStreamingContent(chunk);
+          setStreamingContent(normalizePrefix(chunk));
         }
       );
       
       if (!result || result.trim() === '' || result.includes('No output generated')) {
         setError('No structured tasks were found. Try adding more context, action verbs, or dates to your input.');
       } else {
-        const parsedTasks = parseTasks(result);
+        const normalizedResult = normalizePrefix(result);
+        const parsedTasks = parseTasks(normalizedResult);
         resetTasks(parsedTasks);
-        setLastProcessedInput(input);
+        setLastProcessedInput(normalizedInput);
         
         // Add to history
         setHistory(prev => {
           const newEntry: HistoryEntry = {
             id: `history-${Date.now()}`,
             timestamp: Date.now(),
-            input,
+            input: normalizedInput,
             tasks: parsedTasks,
-            rawOutput: result
+            rawOutput: normalizedResult
           };
           const newHistory = [newEntry, ...prev];
           return newHistory.slice(0, 5); // Keep only last 5
