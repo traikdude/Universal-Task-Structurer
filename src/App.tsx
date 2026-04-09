@@ -1,17 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { CheckSquare, Loader2, Copy, Check, ArrowRight, AlertCircle, RefreshCw, WifiOff } from 'lucide-react';
+import { CheckSquare, Loader2, Copy, Check, ArrowRight, AlertCircle, RefreshCw, WifiOff, ArrowUpDown, Undo, Redo, Moon, Sun } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import confetti from 'canvas-confetti';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { processTaskStream } from './services/gemini';
 import { cn } from './lib/utils';
 import { ExampleChips } from './components/ExampleChips';
 import { TaskListSelector } from './components/TaskListSelector';
-import { ImageUpload } from './components/ImageUpload';
+import { MultiFileUpload } from './components/MultiFileUpload';
 import { TaskCard, Task } from './components/TaskCard';
 import { HistoryPanel, HistoryEntry } from './components/HistoryPanel';
 import { ExportDropdown } from './components/ExportDropdown';
 import { generateCSV, generatePlainText } from './lib/utils';
+import { useTaskHistory } from './hooks/useTaskHistory';
 
 const MIN_CHARS = 15;
 const MAX_CHARS = 6000;
@@ -65,7 +67,7 @@ const parseTasks = (markdown: string): Task[] => {
 export default function App() {
   const [input, setInput] = useState('');
   const [lastProcessedInput, setLastProcessedInput] = useState('');
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const { state: tasks, set: setTasks, undo, redo, canUndo, canRedo, reset: resetTasks } = useTaskHistory([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [streamingContent, setStreamingContent] = useState('');
   const [error, setError] = useState('');
@@ -74,9 +76,8 @@ export default function App() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isSending, setIsSending] = useState(false);
   const [sentSuccess, setSentSuccess] = useState(false);
-  
-  const [imageBase64, setImageBase64] = useState<string | null>(null);
-  const [imageMimeType, setImageMimeType] = useState<string | null>(null);
+  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const [history, setHistory] = useState<HistoryEntry[]>([]);
 
@@ -96,6 +97,29 @@ export default function App() {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  // Theme toggle effect
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        undo();
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+        e.preventDefault();
+        redo();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [undo, redo]);
 
   // Confetti effect
   const prevIsProcessing = useRef(isProcessing);
@@ -135,23 +159,23 @@ export default function App() {
       setError('You are currently offline. Processing will resume once your connection is restored.');
       return;
     }
-    if (input.length < MIN_CHARS && !imageBase64) return;
-    if (input === lastProcessedInput && !imageBase64) {
+    if (input.length < MIN_CHARS) return;
+    if (input === lastProcessedInput) {
       const confirm = window.confirm("This looks identical to your last input. Would you like to reprocess it?");
       if (!confirm) return;
     }
     
     setIsProcessing(true);
     setError('');
-    setTasks([]);
+    resetTasks([]);
     setStreamingContent('');
     setSentSuccess(false);
     
     try {
       const result = await processTaskStream(
         input, 
-        imageBase64 || undefined, 
-        imageMimeType || undefined,
+        undefined, 
+        undefined,
         (chunk) => {
           setStreamingContent(chunk);
         }
@@ -161,7 +185,7 @@ export default function App() {
         setError('No structured tasks were found. Try adding more context, action verbs, or dates to your input.');
       } else {
         const parsedTasks = parseTasks(result);
-        setTasks(parsedTasks);
+        resetTasks(parsedTasks);
         setLastProcessedInput(input);
         
         // Add to history
@@ -170,8 +194,6 @@ export default function App() {
             id: `history-${Date.now()}`,
             timestamp: Date.now(),
             input,
-            imageBase64,
-            imageMimeType,
             tasks: parsedTasks,
             rawOutput: result
           };
@@ -295,15 +317,11 @@ export default function App() {
 
   const handleRestoreInput = (entry: HistoryEntry) => {
     setInput(entry.input);
-    setImageBase64(entry.imageBase64 || null);
-    setImageMimeType(entry.imageMimeType || null);
   };
 
   const handleViewOutput = (entry: HistoryEntry) => {
-    setTasks(entry.tasks);
+    resetTasks(entry.tasks);
     setInput(entry.input);
-    setImageBase64(entry.imageBase64 || null);
-    setImageMimeType(entry.imageMimeType || null);
     setLastProcessedInput(entry.input);
     setError('');
   };
@@ -312,32 +330,75 @@ export default function App() {
     setHistory([]);
   };
 
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+
+    setTasks(prev => {
+      const sorted = [...prev].sort((a, b) => {
+        let valA = a[key as keyof Task];
+        let valB = b[key as keyof Task];
+        
+        if (valA === undefined) valA = '';
+        if (valB === undefined) valB = '';
+
+        if (valA < valB) return direction === 'asc' ? -1 : 1;
+        if (valA > valB) return direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+      return sorted;
+    });
+  };
+
+  const onDragEnd = (result: any) => {
+    if (!result.destination) return;
+
+    setTasks(prev => {
+      const items = Array.from(prev);
+      const [reorderedItem] = items.splice(result.source.index, 1);
+      items.splice(result.destination.index, 0, reorderedItem);
+      return items;
+    });
+  };
+
   const selectedCount = tasks.filter(t => t.isSelected).length;
 
   const inputLength = input.length;
-  const isTooShort = inputLength > 0 && inputLength < MIN_CHARS && !imageBase64;
+  const isTooShort = inputLength > 0 && inputLength < MIN_CHARS;
   const isTooLong = inputLength > MAX_CHARS;
-  const isValid = (inputLength >= MIN_CHARS || imageBase64) && !isTooLong;
+  const isValid = inputLength >= MIN_CHARS && !isTooLong;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col font-sans transition-colors duration-200">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm transition-colors duration-200">
         <div className="flex items-center gap-3">
           <div className="bg-blue-600 p-2 rounded-lg shadow-sm">
             <CheckSquare className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-semibold text-gray-900 tracking-tight">Universal Task Structurer</h1>
-            <p className="text-sm text-gray-500">Transform any text or image into a structured Google Task</p>
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-white tracking-tight">Universal Task Structurer</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Transform any text or image into a structured Google Task</p>
           </div>
         </div>
-        {!isOnline && (
-          <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full text-sm font-medium border border-amber-200">
-            <WifiOff className="w-4 h-4" />
-            Offline Mode
-          </div>
-        )}
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors"
+            title="Toggle theme"
+          >
+            {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </button>
+          {!isOnline && (
+            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-3 py-1.5 rounded-full text-sm font-medium border border-amber-200 dark:border-amber-800">
+              <WifiOff className="w-4 h-4" />
+              Offline Mode
+            </div>
+          )}
+        </div>
       </header>
 
       {/* Main Content */}
@@ -360,15 +421,9 @@ export default function App() {
             />
             
             <div className="px-4 pb-2">
-              <ImageUpload 
-                currentImage={imageBase64}
-                onImageSelect={(base64, mime) => {
-                  setImageBase64(base64);
-                  setImageMimeType(mime);
-                }}
-                onImageRemove={() => {
-                  setImageBase64(null);
-                  setImageMimeType(null);
+              <MultiFileUpload 
+                onTextExtracted={(text) => {
+                  setInput(prev => prev + text);
                 }}
               />
             </div>
@@ -441,6 +496,10 @@ export default function App() {
             
             {tasks.length > 0 && !isProcessing && (
               <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-1 mr-2 border-r border-gray-200 pr-3">
+                  <button onClick={undo} disabled={!canUndo} className={cn("p-1.5 rounded-md transition-colors", canUndo ? "text-gray-600 hover:bg-gray-100" : "text-gray-300 cursor-not-allowed")} title="Undo (Ctrl+Z)"><Undo className="w-4 h-4" /></button>
+                  <button onClick={redo} disabled={!canRedo} className={cn("p-1.5 rounded-md transition-colors", canRedo ? "text-gray-600 hover:bg-gray-100" : "text-gray-300 cursor-not-allowed")} title="Redo (Ctrl+Y)"><Redo className="w-4 h-4" /></button>
+                </div>
                 <TaskListSelector 
                   onSend={handleSendToTasks} 
                   isSending={isSending} 
@@ -489,7 +548,13 @@ export default function App() {
               </div>
             ) : tasks.length > 0 ? (
               <div className="flex-1 overflow-y-auto p-4 bg-gray-50/50">
-                <div className="flex justify-end mb-3 px-2">
+                <div className="flex justify-between items-center mb-3 px-2">
+                  <div className="flex items-center gap-3 text-sm">
+                    <span className="text-gray-500 font-medium flex items-center gap-1"><ArrowUpDown className="w-3 h-3" /> Sort by:</span>
+                    <button onClick={() => handleSort('priority')} className={cn("font-medium hover:text-blue-600 transition-colors", sortConfig?.key === 'priority' ? "text-blue-600" : "text-gray-600")}>Priority {sortConfig?.key === 'priority' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</button>
+                    <button onClick={() => handleSort('dueDate')} className={cn("font-medium hover:text-blue-600 transition-colors", sortConfig?.key === 'dueDate' ? "text-blue-600" : "text-gray-600")}>Due Date {sortConfig?.key === 'dueDate' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</button>
+                    <button onClick={() => handleSort('suggestedList')} className={cn("font-medium hover:text-blue-600 transition-colors", sortConfig?.key === 'suggestedList' ? "text-blue-600" : "text-gray-600")}>List {sortConfig?.key === 'suggestedList' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</button>
+                  </div>
                   <button 
                     onClick={handleToggleAll} 
                     className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
@@ -498,19 +563,39 @@ export default function App() {
                   </button>
                 </div>
                 
-                <div className="flex flex-col gap-4">
-                  {tasks.map((task, index) => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      index={index}
-                      totalTasks={tasks.length}
-                      onUpdate={handleUpdateTask}
-                      onDelete={handleDeleteTask}
-                      onToggleSelect={handleToggleSelect}
-                    />
-                  ))}
-                </div>
+                <DragDropContext onDragEnd={onDragEnd}>
+                  <Droppable droppableId="tasks-list">
+                    {(provided) => (
+                      <div 
+                        className="flex flex-col gap-4"
+                        {...provided.droppableProps}
+                        ref={provided.innerRef}
+                      >
+                        {tasks.map((task, index) => (
+                          <Draggable key={task.id} draggableId={task.id} index={index}>
+                            {(provided) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                              >
+                                <TaskCard
+                                  task={task}
+                                  index={index}
+                                  totalTasks={tasks.length}
+                                  onUpdate={handleUpdateTask}
+                                  onDelete={handleDeleteTask}
+                                  onToggleSelect={handleToggleSelect}
+                                />
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                </DragDropContext>
               </div>
             ) : (
               <div className="flex-1 p-6 flex flex-col items-center justify-center text-gray-400 gap-3 bg-gray-50/50">

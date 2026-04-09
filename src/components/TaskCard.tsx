@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Trash2, Edit2 } from 'lucide-react';
+import { Trash2, Edit2, Code, GripVertical } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { cn } from '../lib/utils';
@@ -29,10 +29,16 @@ export function TaskCard({ task, index, totalTasks, onUpdate, onDelete, onToggle
   const [editTitle, setEditTitle] = useState(task.title);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isRawEditMode, setIsRawEditMode] = useState(false);
+  const [rawEditContent, setRawEditContent] = useState(task.rawContent);
 
   useEffect(() => {
     setEditTitle(task.title);
   }, [task.title]);
+
+  useEffect(() => {
+    setRawEditContent(task.rawContent);
+  }, [task.rawContent]);
 
   useEffect(() => {
     if (isEditingTitle && titleInputRef.current) {
@@ -56,6 +62,13 @@ export function TaskCard({ task, index, totalTasks, onUpdate, onDelete, onToggle
     }
   };
 
+  const handleRawSave = () => {
+    setIsRawEditMode(false);
+    if (rawEditContent !== task.rawContent) {
+      onUpdate(task.id, { rawContent: rawEditContent });
+    }
+  };
+
   const handleDelete = () => {
     setIsDeleting(true);
     setTimeout(() => {
@@ -72,12 +85,16 @@ export function TaskCard({ task, index, totalTasks, onUpdate, onDelete, onToggle
   return (
     <div 
       className={cn(
-        "relative bg-white border rounded-xl p-5 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/10 hover:z-10", 
+        "relative bg-white border rounded-xl p-5 pl-10 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/10 hover:z-10 group/card", 
         task.isSelected ? "border-blue-300 ring-2 ring-blue-100 shadow-md" : "border-gray-200 opacity-75 shadow-sm",
         isDeleting ? "opacity-0 scale-95" : "opacity-100 scale-100"
       )}
     >
-      <div className="absolute top-5 left-4">
+      <div className="absolute top-1/2 -translate-y-1/2 left-2 text-gray-300 opacity-0 group-hover/card:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
+        <GripVertical className="w-5 h-5" />
+      </div>
+
+      <div className="absolute top-5 left-8">
         <input 
           type="checkbox" 
           checked={task.isSelected} 
@@ -92,6 +109,16 @@ export function TaskCard({ task, index, totalTasks, onUpdate, onDelete, onToggle
             Edited
           </span>
         )}
+        <button 
+          onClick={() => setIsRawEditMode(!isRawEditMode)}
+          className={cn(
+            "p-1.5 rounded-md transition-colors",
+            isRawEditMode ? "text-blue-600 bg-blue-50" : "text-gray-400 hover:text-blue-500 hover:bg-blue-50"
+          )}
+          title="Toggle Raw Edit"
+        >
+          <Code className="w-4 h-4" />
+        </button>
         <button 
           onClick={handleDelete}
           className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-md transition-colors"
@@ -145,11 +172,27 @@ export function TaskCard({ task, index, totalTasks, onUpdate, onDelete, onToggle
           )}
         </div>
 
-        <div className="markdown-body">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {displayMarkdown}
-          </ReactMarkdown>
-        </div>
+        {isRawEditMode ? (
+          <div className="grid grid-cols-2 gap-4 border border-gray-200 rounded-lg overflow-hidden h-64">
+            <textarea
+              value={rawEditContent}
+              onChange={(e) => setRawEditContent(e.target.value)}
+              onBlur={handleRawSave}
+              className="w-full h-full p-3 text-sm font-mono bg-gray-50 text-gray-800 resize-none outline-none border-r border-gray-200"
+            />
+            <div className="w-full h-full p-3 overflow-y-auto bg-white markdown-body text-sm">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {rawEditContent}
+              </ReactMarkdown>
+            </div>
+          </div>
+        ) : (
+          <div className="markdown-body">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {displayMarkdown}
+            </ReactMarkdown>
+          </div>
+        )}
         
         <div className="mt-4 pt-3 border-t border-gray-100 flex items-center gap-3">
           <label className="text-sm font-medium text-gray-600">Due Date:</label>

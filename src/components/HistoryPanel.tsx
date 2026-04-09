@@ -7,8 +7,6 @@ export interface HistoryEntry {
   id: string;
   timestamp: number;
   input: string;
-  imageBase64?: string | null;
-  imageMimeType?: string | null;
   tasks: Task[];
   rawOutput: string;
 }

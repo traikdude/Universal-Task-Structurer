@@ -303,6 +303,16 @@ Only extract the actual task content IF the transferred item has rich contact or
 information embedded after the transfer marker (like vendor name, website, product) — 
 in that case, extract it as a NEW fresh task with no reference to the transfer status.
 
+FUTURE TASK GENERATION RULE:
+If the input text implies a recurring or future action (e.g., "monthly pickup", "next Friday 2pm", "renew in 30 days"):
+1. Create the immediate task if applicable.
+2. Auto-create additional future tasks based on the recurrence pattern.
+   - For "monthly", create tasks for the next 3 months (e.g., 30, 60, and 90 days ahead).
+   - For "weekly", create tasks for the next 3 weeks.
+   - For specific future dates ("next Friday"), set the exact future date/time.
+3. Mark these auto-generated future tasks by prepending "📅 FUTURE TASK: " to their Title.
+4. Set their due dates accurately based on the current date: {{CURRENT_DATE}}.
+
 Priority Assessment Matrix
 The system automatically assigns priority based on contextual signals:
 🔴 **P0 — Critical:** Time-sensitive, immediate action required (e.g., "today", "ASAP", "by end of day")

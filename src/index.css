@@ -4,17 +4,75 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
+@layer base {
+  html.dark {
+    color-scheme: dark;
+  }
+  
+  html.dark body {
+    @apply bg-gray-900 text-gray-100;
+  }
+
+  html.dark .bg-white {
+    @apply bg-gray-800 border-gray-700;
+  }
+
+  html.dark .bg-gray-50 {
+    @apply bg-gray-900;
+  }
+
+  html.dark .text-gray-900 {
+    @apply text-gray-100;
+  }
+
+  html.dark .text-gray-800 {
+    @apply text-gray-200;
+  }
+
+  html.dark .text-gray-700 {
+    @apply text-gray-300;
+  }
+
+  html.dark .text-gray-600 {
+    @apply text-gray-300;
+  }
+
+  html.dark .text-gray-500 {
+    @apply text-gray-400;
+  }
+
+  html.dark .border-gray-200 {
+    @apply border-gray-700;
+  }
+
+  html.dark .border-gray-100 {
+    @apply border-gray-800;
+  }
+}
+
 @layer utilities {
   .markdown-body {
     @apply text-gray-800 text-sm leading-relaxed;
+  }
+  
+  html.dark .markdown-body {
+    @apply text-gray-300;
   }
   
   .markdown-body h2 {
     @apply text-xl font-semibold mt-6 mb-4 pb-2 border-b border-gray-200 text-gray-900;
   }
   
+  html.dark .markdown-body h2 {
+    @apply border-gray-700 text-gray-100;
+  }
+  
   .markdown-body h3 {
     @apply text-lg font-medium mt-5 mb-3 text-gray-900;
+  }
+  
+  html.dark .markdown-body h3 {
+    @apply text-gray-100;
   }
   
   .markdown-body p {
@@ -33,7 +91,15 @@
     @apply font-semibold text-gray-900;
   }
   
+  html.dark .markdown-body strong {
+    @apply text-gray-100;
+  }
+  
   .markdown-body hr {
     @apply my-6 border-t border-gray-200;
+  }
+  
+  html.dark .markdown-body hr {
+    @apply border-gray-700;
   }
 }
