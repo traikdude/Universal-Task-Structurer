@@ -18,7 +18,7 @@ import { generateCSV, generatePlainText } from './lib/utils';
 import { useTaskHistory } from './hooks/useTaskHistory';
 
 const MIN_CHARS = 15;
-const MAX_CHARS = 6000;
+const MAX_CHARS = 100000;
 
 // Auto-replace ➖ prefix with " - " before processing
 function normalizePrefix(inputText: string) {
