@@ -1,20 +1,47 @@
 import { GoogleGenAI } from '@google/genai';
 import { SYSTEM_PROMPT } from '../constants/systemPrompt';
 
+// ── Configuration ────────────────────────────────────────────────────────────
+
 /**
- * Ordered list of Gemini models to attempt, from preferred to fallback.
- * This prevents hard failures when a specific model is unavailable
- * for a given API key's quota tier.
+ * Ordered list of Gemini models to attempt, from most capable to lightest fallback.
+ *
+ * This chain is tuned to the confirmed available models for this project's API key.
+ * Priority order:
+ *   1. gemini-2.5-flash   — best speed/quality balance, primary choice
+ *   2. gemini-2.0-flash   — stable GA release, reliable fallback
+ *   3. gemini-2.0-flash-001 — pinned GA version, predictable behavior
+ *   4. gemini-2.5-flash-lite — lightweight final fallback
+ *
+ * Update this list by querying:
+ *   GET https://generativelanguage.googleapis.com/v1beta/models?key=<YOUR_KEY>
  */
 const MODEL_FALLBACK_CHAIN = [
   'gemini-2.5-flash',
+  'gemini-2.0-flash',
   'gemini-2.0-flash-001',
-  'gemini-2.0-flash-lite-001',
+  'gemini-2.5-flash-lite',
 ] as const;
 
+// Maximum number of retries per model on transient errors (429, 503)
+const TRANSIENT_RETRY_LIMIT = 2;
+const TRANSIENT_RETRY_DELAY_MS = 1500;
+
+// Errors that merit trying the next model vs. those that are unrecoverable
+const SKIP_TO_NEXT_MODEL_STATUSES = new Set([403, 404, 429]);
+
+// ── Custom Error Class ───────────────────────────────────────────────────────
+
 /**
- * Custom error class that preserves API-specific details
- * (status code, model name, raw message) for user-facing diagnostics.
+ * Structured error thrown when a Gemini API call fails.
+ * Preserves HTTP status, model name, and raw API message for user-facing diagnostics.
+ *
+ * @example
+ * catch (err) {
+ *   if (err instanceof GeminiApiError) {
+ *     console.log(err.status, err.model, err.details);
+ *   }
+ * }
  */
 export class GeminiApiError extends Error {
   public readonly status?: number;
@@ -30,25 +57,44 @@ export class GeminiApiError extends Error {
   }
 }
 
-// Initialize the SDK using Vite's import.meta.env convention.
-// VITE_GEMINI_API_KEY is the canonical variable; fall back to the legacy
-// process.env injection for backward compatibility with the AI Studio export.
+// ── SDK Initialization ───────────────────────────────────────────────────────
+
+// Read key using Vite's import.meta.env convention first (canonical),
+// with a fallback to the legacy process.env injection for AI Studio exports.
 const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY
   || process.env.GEMINI_API_KEY
   || '';
 
 const ai = new GoogleGenAI({ apiKey });
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Returns the numeric HTTP status from an API error object if available. */
+function extractStatus(error: any): number | undefined {
+  const raw = error?.status ?? error?.statusCode ?? error?.code;
+  return typeof raw === 'number' ? raw : undefined;
+}
+
+/** Sleeps for the given number of milliseconds. */
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// ── Public API ───────────────────────────────────────────────────────────────
+
 /**
- * Streams a Gemini response for the given task input, trying each model
- * in the fallback chain until one succeeds.
+ * Streams a Gemini response for the given task input, automatically trying
+ * each model in the fallback chain until one succeeds.
  *
- * @param input      – Raw user text to structure into tasks.
- * @param imageBase64 – Optional base64-encoded image for multimodal input.
- * @param imageMimeType – MIME type of the image (e.g., 'image/png').
- * @param onChunk    – Callback invoked with the accumulated text after each stream chunk.
+ * Transient errors (429 rate-limit, 503 unavailable) are retried up to
+ * TRANSIENT_RETRY_LIMIT times before moving to the next model.
+ *
+ * @param input         - Raw user text or image description to structure into tasks.
+ * @param imageBase64   - Optional base64-encoded image for multimodal input.
+ * @param imageMimeType - MIME type of the image (e.g., 'image/png').
+ * @param onChunk       - Callback invoked with accumulated text after each stream chunk.
  * @returns The complete generated text.
- * @throws {GeminiApiError} with structured details if all models fail.
+ * @throws {GeminiApiError} with structured details if all models in the chain fail.
  */
 export async function processTaskStream(
   input: string,
@@ -56,19 +102,24 @@ export async function processTaskStream(
   imageMimeType: string | undefined,
   onChunk: (text: string) => void
 ): Promise<string> {
-  // Validate API key before making any network calls
+  // ── Pre-flight validation ──────────────────────────────────────────────────
   if (!apiKey) {
     throw new GeminiApiError(
       'No Gemini API key configured. Add VITE_GEMINI_API_KEY to your .env.local file.',
-      { details: 'Missing API key in environment variables.' }
+      { details: 'Missing VITE_GEMINI_API_KEY environment variable.' }
     );
   }
 
-  // Build the content payload
+  // ── Build content payload ──────────────────────────────────────────────────
   const contents: any[] = [
-    { text: `###Apply the aforementioned framework text to the following:\n\n${input || 'Extract tasks from the provided image.'}` }
+    {
+      text: `###Apply the aforementioned framework text to the following:\n\n${
+        input || 'Extract tasks from the provided image.'
+      }`
+    }
   ];
 
+  // Prepend image data if provided (multimodal input)
   if (imageBase64 && imageMimeType) {
     const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
     contents.unshift({
@@ -79,71 +130,86 @@ export async function processTaskStream(
     });
   }
 
-  // Inject today's date into the system prompt for temporal reasoning
+  // ── Inject today's date for temporal reasoning ─────────────────────────────
   const currentDate = new Date().toLocaleDateString('en-US', {
     weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
   });
   const systemInstruction = SYSTEM_PROMPT.replace(/\{\{CURRENT_DATE\}\}/g, currentDate);
 
-  // Attempt each model in the fallback chain
-  let lastError: unknown = null;
+  // ── Model fallback loop ───────────────────────────────────────────────────
+  let lastError: GeminiApiError | null = null;
 
   for (const model of MODEL_FALLBACK_CHAIN) {
-    try {
-      const responseStream = await ai.models.generateContentStream({
-        model,
-        contents,
-        config: {
-          systemInstruction,
-          temperature: 0.1,
-        }
-      });
+    let attempt = 0;
 
-      let fullText = '';
-      for await (const chunk of responseStream) {
-        const chunkText = chunk.text;
-        if (chunkText) {
-          fullText += chunkText;
-          onChunk(fullText);
-        }
-      }
+    while (attempt <= TRANSIENT_RETRY_LIMIT) {
+      try {
+        console.info(`[Gemini] Trying model "${model}" (attempt ${attempt + 1})`);
 
-      if (!fullText || fullText.trim() === '') {
-        // Model returned empty — try next in chain
-        lastError = new GeminiApiError(
-          `Model "${model}" returned an empty response.`,
-          { model, details: 'Empty stream output.' }
-        );
-        continue;
-      }
-
-      return fullText;
-
-    } catch (error: any) {
-      // Extract structured details from Google API error responses
-      const status = error?.status ?? error?.statusCode ?? error?.code;
-      const rawMessage = error?.message ?? String(error);
-      console.warn(`[Gemini] Model "${model}" failed (${status}): ${rawMessage}`);
-
-      lastError = new GeminiApiError(
-        `Model "${model}" is not available for your API key.`,
-        {
-          status: typeof status === 'number' ? status : undefined,
+        const responseStream = await ai.models.generateContentStream({
           model,
-          details: rawMessage,
+          contents,
+          config: {
+            systemInstruction,
+            temperature: 0.1,
+          }
+        });
+
+        // Stream chunks — accumulate and forward to caller
+        let fullText = '';
+        for await (const chunk of responseStream) {
+          const chunkText = chunk.text;
+          if (chunkText) {
+            fullText += chunkText;
+            onChunk(fullText);
+          }
         }
-      );
-      // Continue to the next model in the chain
+
+        // An empty response is treated as a soft failure — try next model
+        if (!fullText || fullText.trim() === '') {
+          lastError = new GeminiApiError(
+            `Model "${model}" returned an empty response.`,
+            { model, details: 'Empty stream output.' }
+          );
+          console.warn(`[Gemini] "${model}" returned empty text, skipping.`);
+          break; // break inner retry loop, continue to next model
+        }
+
+        // ✅ Success
+        console.info(`[Gemini] Success with model "${model}"`);
+        return fullText;
+
+      } catch (error: any) {
+        const status = extractStatus(error);
+        const rawMessage = error?.message ?? String(error);
+
+        lastError = new GeminiApiError(
+          `Model "${model}" failed: ${rawMessage}`,
+          { status, model, details: rawMessage }
+        );
+
+        console.warn(`[Gemini] Model "${model}" failed (HTTP ${status ?? 'unknown'}): ${rawMessage}`);
+
+        // Immediately move to the next model for definitive failures
+        if (status !== undefined && SKIP_TO_NEXT_MODEL_STATUSES.has(status)) {
+          console.warn(`[Gemini] Status ${status} — skipping "${model}" and trying next model.`);
+          break; // break inner retry loop
+        }
+
+        // For transient/network errors, retry with a short delay
+        if (attempt < TRANSIENT_RETRY_LIMIT) {
+          const delay = TRANSIENT_RETRY_DELAY_MS * (attempt + 1);
+          console.info(`[Gemini] Retrying "${model}" in ${delay}ms...`);
+          await sleep(delay);
+        }
+      }
+
+      attempt++;
     }
   }
 
-  // All models exhausted — throw a descriptive error
-  const finalErr = lastError instanceof GeminiApiError
-    ? lastError
-    : new GeminiApiError('All Gemini models failed.', {
-        details: String(lastError),
-      });
-
-  console.error('[Gemini] All models exhausted:', finalErr);
+  // ── All models exhausted ──────────────────────────────────────────────────
+  const finalErr = lastError ?? new GeminiApiError('All Gemini models failed with no diagnostic information.');
+  console.error('[Gemini] All models in fallback chain exhausted:', finalErr);
   throw finalErr;
 }
