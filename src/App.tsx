@@ -207,7 +207,7 @@ export default function App() {
     setError('');
     resetTasks([]);
     setStreamingContent('');
-    setSentSuccess(false);
+    setSendStatus('idle');
     
     try {
       const result = await processTaskStream(
