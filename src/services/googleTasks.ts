@@ -24,6 +24,7 @@ export interface GoogleTaskPayload {
 export interface InsertableTask {
   title: string;
   dueDate?: string;
+  dueTime?: string;  // HH:mm format (24h), e.g. "14:30"
   rawContent?: string;
 }
 
@@ -84,26 +85,26 @@ export const createTaskList = async (accessToken: string, title: string): Promis
  * Inserts a single task into the specified list.
  *
  * Converts the app's internal task shape into the Google Tasks API payload,
- * handling date normalization defensively.
+ * handling date and time normalization defensively.
  */
 export const insertTask = async (
   accessToken: string,
   listId: string,
   task: InsertableTask
 ): Promise<any> => {
-  // Normalize due date to ISO 8601 format required by Google Tasks
+  // Compose ISO 8601 due date-time from the separate date and time fields
   let due: string | undefined;
   if (task.dueDate) {
     try {
-      const dateStr = task.dueDate.includes('T')
-        ? task.dueDate
-        : `${task.dueDate}T12:00:00.000Z`;
+      // If the user set a time, compose date + time; otherwise default to noon UTC
+      const timePart = task.dueTime ? `${task.dueTime}:00` : '12:00:00';
+      const dateStr = `${task.dueDate}T${timePart}.000Z`;
       const parsed = new Date(dateStr);
       if (!isNaN(parsed.getTime())) {
         due = parsed.toISOString();
       }
     } catch {
-      console.warn('[Google Tasks] Could not parse due date:', task.dueDate);
+      console.warn('[Google Tasks] Could not parse due date/time:', task.dueDate, task.dueTime);
     }
   }
 

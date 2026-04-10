@@ -8,6 +8,7 @@ export interface Task {
   id: string;
   title: string;
   dueDate: string;
+  dueTime: string;   // HH:mm format (24h), e.g. "14:30"
   priority: string;
   suggestedList?: string;
   rawContent: string;
@@ -194,14 +195,28 @@ export function TaskCard({ task, index, totalTasks, onUpdate, onDelete, onToggle
           </div>
         )}
         
-        <div className="mt-4 pt-3 border-t border-gray-100 flex items-center gap-3">
-          <label className="text-sm font-medium text-gray-600">Due Date:</label>
-          <input 
-            type="date" 
-            value={task.dueDate}
-            onChange={(e) => onUpdate(task.id, { dueDate: e.target.value })}
-            className="text-sm border border-gray-300 rounded px-2 py-1 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-700"
-          />
+        <div className="mt-4 pt-3 border-t border-gray-100 flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-600 whitespace-nowrap">📅 Date:</label>
+            <input 
+              type="date" 
+              value={task.dueDate}
+              onChange={(e) => onUpdate(task.id, { dueDate: e.target.value })}
+              className="text-sm border border-gray-300 rounded-lg px-2.5 py-1.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-700 bg-white transition-colors"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-600 whitespace-nowrap">⏰ Time:</label>
+            <input 
+              type="time" 
+              value={task.dueTime}
+              onChange={(e) => onUpdate(task.id, { dueTime: e.target.value })}
+              className="text-sm border border-gray-300 rounded-lg px-2.5 py-1.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-700 bg-white transition-colors"
+            />
+            {!task.dueTime && (
+              <span className="text-xs text-gray-400 italic">No time set</span>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -49,6 +49,21 @@ const parseTasks = (markdown: string): Task[] => {
       dueDate = dueMatch[1];
     }
 
+    // Extract time — supports formats like "⏰ **Time:** 2:00 PM", "time: 14:00", "10:30 AM"
+    let dueTime = '';
+    const timeMatch24 = raw.match(/(?:time:|⏰\s*\*\*Time:\*\*)\s*(\d{1,2}:\d{2})(?:\s*(AM|PM))?/i);
+    if (timeMatch24) {
+      let hours = parseInt(timeMatch24[1].split(':')[0], 10);
+      const minutes = timeMatch24[1].split(':')[1];
+      const period = timeMatch24[2];
+      if (period) {
+        // Convert 12h to 24h
+        if (period.toUpperCase() === 'PM' && hours < 12) hours += 12;
+        if (period.toUpperCase() === 'AM' && hours === 12) hours = 0;
+      }
+      dueTime = `${hours.toString().padStart(2, '0')}:${minutes}`;
+    }
+
     let priority = 'P3';
     const priorityMatch = raw.match(/(🔴|🟠|🟡|🟢)\s*\*\*(P[0-3])/);
     if (priorityMatch) {
@@ -65,6 +80,7 @@ const parseTasks = (markdown: string): Task[] => {
       id: `task-${Date.now()}-${idx}`,
       title,
       dueDate,
+      dueTime,
       priority,
       suggestedList,
       rawContent: raw,
@@ -362,6 +378,10 @@ export default function App() {
         newRaw = newRaw.replace(/(🔴|🟠|🟡|🟢)\s*\*\*P[0-3][^*]*\*\*/, priorityMap[updates.priority]);
       }
       
+      // Determine the effective date and time after this update
+      const effectiveDate = updates.dueDate ?? t.dueDate;
+      const effectiveTime = updates.dueTime ?? t.dueTime;
+
       if (updates.dueDate !== undefined && updates.dueDate !== t.dueDate) {
         if (newRaw.match(/due:\s*\d{4}-\d{2}-\d{2}/i)) {
           newRaw = newRaw.replace(/due:\s*\d{4}-\d{2}-\d{2}/i, `due: ${updates.dueDate}`);
@@ -372,6 +392,27 @@ export default function App() {
         if (!isNaN(dateObj.getTime())) {
           const formattedDate = dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
           newRaw = newRaw.replace(/(📆 \*\*Date:\*\* )[^\n]+/, `$1${formattedDate}`);
+        }
+      }
+
+      if (updates.dueTime !== undefined && updates.dueTime !== t.dueTime) {
+        // Format time for display (e.g., "2:30 PM")
+        let displayTime = updates.dueTime;
+        if (updates.dueTime) {
+          const [h, m] = updates.dueTime.split(':').map(Number);
+          const period = h >= 12 ? 'PM' : 'AM';
+          const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
+          displayTime = `${displayHour}:${m.toString().padStart(2, '0')} ${period}`;
+        }
+
+        // Update or insert the time line in the raw markdown
+        if (newRaw.match(/⏰\s*\*\*Time:\*\*\s*[^\n]*/i)) {
+          newRaw = newRaw.replace(/⏰\s*\*\*Time:\*\*\s*[^\n]*/i, `⏰ **Time:** ${displayTime}`);
+        } else if (newRaw.match(/📆\s*\*\*Date:\*\*/i)) {
+          // Insert time line right after the date line
+          newRaw = newRaw.replace(/(📆\s*\*\*Date:\*\*\s*[^\n]*)/, `$1\n⏰ **Time:** ${displayTime}`);
+        } else if (newRaw.match(/### 📅 DUE DATE & TIME/i)) {
+          newRaw = newRaw.replace(/(### 📅 DUE DATE & TIME\n)/i, `$1⏰ **Time:** ${displayTime}\n`);
         }
       }
       
