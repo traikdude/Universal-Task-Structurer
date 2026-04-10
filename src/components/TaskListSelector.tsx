@@ -24,6 +24,7 @@ export function TaskListSelector({ onSend, isSending, selectedCount, totalCount,
   const [isCreating, setIsCreating] = useState(false);
   const [newListName, setNewListName] = useState('');
   const [isLoadingLists, setIsLoadingLists] = useState(false);
+  const [listError, setListError] = useState<string | null>(null);
 
   useEffect(() => {
     if (accessToken) {
@@ -43,9 +44,13 @@ export function TaskListSelector({ onSend, isSending, selectedCount, totalCount,
             }
             // If no match, default to the primary list (usually the first returned)
             setSelectedListId(realLists[0].id);
+            setListError(null);
           }
         })
-        .catch(err => console.error("Failed to load real task lists:", err))
+        .catch(err => {
+          console.error("Failed to load real task lists:", err);
+          setListError(err?.message || "Failed to load lists");
+        })
         .finally(() => setIsLoadingLists(false));
     }
   }, [accessToken, suggestedListTitle]);
@@ -86,7 +91,12 @@ export function TaskListSelector({ onSend, isSending, selectedCount, totalCount,
   }
 
   return (
-    <div className="flex items-center gap-3 bg-gray-50 p-2 rounded-lg border border-gray-200">
+    <div className="flex items-center gap-3 bg-gray-50 p-2 rounded-lg border border-gray-200 relative">
+      {listError && (
+        <div className="absolute top-12 right-0 bg-red-100 border border-red-200 text-red-700 px-3 py-2 rounded shadow-lg z-50 text-xs w-64">
+          <strong>Cannot connect to Google Tasks:</strong> {listError}
+        </div>
+      )}
       <div className="flex items-center gap-2">
         <List className="w-4 h-4 text-gray-500" />
         {isCreating ? (
