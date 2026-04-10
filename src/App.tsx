@@ -14,6 +14,7 @@ import { VoiceInput } from './components/VoiceInput';
 import { TaskCard, Task } from './components/TaskCard';
 import { HistoryPanel, HistoryEntry } from './components/HistoryPanel';
 import { ExportDropdown } from './components/ExportDropdown';
+import { SendConfirmationModal, SendStatus } from './components/SendConfirmationModal';
 import { generateCSV, generatePlainText } from './lib/utils';
 import { useTaskHistory } from './hooks/useTaskHistory';
 import { useGoogleLogin, googleLogout } from '@react-oauth/google';
@@ -83,8 +84,9 @@ export default function App() {
   const [copied, setCopied] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [isSending, setIsSending] = useState(false);
-  const [sentSuccess, setSentSuccess] = useState(false);
+  const [sendStatus, setSendStatus] = useState<SendStatus>('idle');
+  const [sendErrorMessage, setSendErrorMessage] = useState('');
+  const [sendListName, setSendListName] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [accessToken, setAccessToken] = useState<string | null>(localStorage.getItem('google_access_token'));
@@ -300,36 +302,44 @@ export default function App() {
     }
   };
 
-  const handleSendToTasks = async (listId: string) => {
+  const handleSendToTasks = async (listId: string, listTitle?: string) => {
     if (!accessToken) {
-        login();
-        return;
+      login();
+      return;
     }
-    
+
     const selectedTasks = tasks.filter(t => t.isSelected);
     if (selectedTasks.length === 0) return;
-    
-    setIsSending(true);
+
+    // Capture the human-readable list name for the modal
+    setSendListName(listTitle || listId);
+    setSendErrorMessage('');
+    setSendStatus('sending');
+
     try {
-      // The listId is now a real Google Tasks list ID managed directly by TaskListSelector.
-      // We iterate over the selected tasks and push them directly to Google.
+      // Push each selected task to Google Tasks sequentially.
+      // The listId is the real Google Tasks list ID provided by TaskListSelector.
       for (const t of selectedTasks) {
-          await insertTask(accessToken, listId, t);
+        await insertTask(accessToken, listId, t);
       }
-      
-      setSentSuccess(true);
-      setTimeout(() => setSentSuccess(false), 3000);
+
+      // Only reach here on a fully confirmed success
+      setSendStatus('success');
     } catch (e: any) {
-      console.error('[App] Google Tasks error:', e);
-      // Only force logout on 401 (token expired), not on other errors
+      console.error('[App] Google Tasks send error:', e);
+
       if (e?.status === 401) {
-        alert('Your Google session has expired. Please sign in again.');
+        // Expired token — close modal and force re-auth
+        setSendStatus('idle');
         handleLogout();
+        alert('Your Google session has expired. Please sign in again.');
       } else {
-        alert(`Failed to send to Google Tasks: ${e?.message || 'Unknown error'}`);
+        const msg = e?.message
+          ? `${e.message}${e.status ? ` (HTTP ${e.status})` : ''}`
+          : 'An unexpected error occurred. Please try again.';
+        setSendErrorMessage(msg);
+        setSendStatus('error');
       }
-    } finally {
-      setIsSending(false);
     }
   };
 
@@ -588,13 +598,13 @@ export default function App() {
                 </div>
                 <TaskListSelector 
                   onSend={handleSendToTasks} 
-                  isSending={isSending} 
+                  isSending={sendStatus === 'sending'} 
                   selectedCount={selectedCount} 
                   totalCount={tasks.length} 
                   suggestedListTitle={tasks[0]?.suggestedList}
                   accessToken={accessToken}
                 />
-                {sentSuccess && <span className="text-xs text-green-600 font-medium flex items-center gap-1"><Check className="w-3 h-3" /> Sent!</span>}
+
                 <ExportDropdown 
                   onExportMarkdown={handleCopy}
                   onExportCSV={handleExportCSV}
@@ -698,6 +708,20 @@ export default function App() {
         </div>
 
       </main>
+
+      {/* Send Confirmation Modal — overlays everything, only visible during send flow */}
+      <SendConfirmationModal
+        status={sendStatus}
+        taskCount={tasks.filter(t => t.isSelected).length}
+        listName={sendListName}
+        errorMessage={sendErrorMessage}
+        onRetry={() => {
+          // Re-trigger the send with the same list. User must click Send again
+          // because we don't cache the listId here — so we just close and let them retry.
+          setSendStatus('idle');
+        }}
+        onClose={() => setSendStatus('idle')}
+      />
     </div>
   );
 }

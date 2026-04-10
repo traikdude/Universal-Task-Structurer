@@ -9,7 +9,7 @@ interface TaskList {
 }
 
 interface TaskListSelectorProps {
-  onSend: (listId: string) => void;
+  onSend: (listId: string, listTitle: string) => void;
   isSending: boolean;
   selectedCount: number;
   totalCount: number;
@@ -131,7 +131,10 @@ export function TaskListSelector({ onSend, isSending, selectedCount, totalCount,
       <div className="w-px h-6 bg-gray-300 mx-1"></div>
 
       <button
-        onClick={() => onSend(selectedListId)}
+        onClick={() => {
+          const selectedList = lists.find(l => l.id === selectedListId);
+          onSend(selectedListId, selectedList?.title || selectedListId);
+        }}
         disabled={isDisabled}
         className={cn(
           "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
