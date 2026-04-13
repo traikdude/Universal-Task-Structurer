@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Trash2, Edit2, Code, GripVertical } from 'lucide-react';
+import { Trash2, Edit2, Code, GripVertical, CheckSquare, Clock, Calendar, Hash } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { cn } from '../lib/utils';
@@ -74,10 +74,20 @@ export function TaskCard({ task, index, totalTasks, onUpdate, onDelete, onToggle
     setIsDeleting(true);
     setTimeout(() => {
       onDelete(task.id);
-    }, 300); // match animation duration
+    }, 300);
   };
 
-  // Strip title and priority from markdown for display
+  // Priority Style Matrix
+  const priorityStyles = {
+    'P0': 'border-red-500/50 text-red-400 bg-red-500/10 shadow-[0_0_15px_rgba(239,68,68,0.2)] animate-pulse',
+    'P1': 'border-orange-500/50 text-orange-400 bg-orange-500/10 shadow-[0_0_15px_rgba(249,115,22,0.2)]',
+    'P2': 'border-amber-500/50 text-amber-400 bg-amber-500/10 shadow-[0_0_15px_rgba(245,158,11,0.2)]',
+    'P3': 'border-emerald-500/50 text-emerald-400 bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
+  };
+
+  const currentPriorityStyle = priorityStyles[task.priority as keyof typeof priorityStyles] || priorityStyles['P3'];
+
+  // Strip structural headers for clean display
   let displayMarkdown = task.rawContent;
   displayMarkdown = displayMarkdown.replace(/## ✅ GOOGLE TASK OUTPUT\n*/i, '');
   displayMarkdown = displayMarkdown.replace(/### 📌 TASK HEADER(?: \(Title\))?\n+[^\n]+\n*/i, '');
@@ -86,72 +96,84 @@ export function TaskCard({ task, index, totalTasks, onUpdate, onDelete, onToggle
   return (
     <div 
       className={cn(
-        "relative bg-white border rounded-xl p-5 pl-10 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/10 hover:z-10 group/card", 
-        task.isSelected ? "border-blue-300 ring-2 ring-blue-100 shadow-md" : "border-gray-200 opacity-75 shadow-sm",
-        isDeleting ? "opacity-0 scale-95" : "opacity-100 scale-100"
+        "group relative glass-card overflow-hidden transition-all duration-500 rounded-2xl", 
+        task.isSelected ? "ring-2 ring-neon-cyan/40 bg-slate-900/80 shadow-[0_0_30px_rgba(34,211,238,0.1)]" : "border-slate-800 opacity-90 hover:opacity-100 hover:border-slate-700/50",
+        isDeleting ? "opacity-0 scale-95 translate-x-10" : "opacity-100 scale-100 translate-x-0"
       )}
     >
-      <div className="absolute top-1/2 -translate-y-1/2 left-2 text-gray-300 opacity-0 group-hover/card:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
+      {/* Background Accent */}
+      {task.isSelected && (
+        <div className="absolute inset-0 bg-gradient-to-br from-neon-cyan/5 to-transparent pointer-events-none"></div>
+      )}
+
+      {/* Drag Anchor */}
+      <div className="absolute top-1/2 -translate-y-1/2 left-2 text-slate-700 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
         <GripVertical className="w-5 h-5" />
       </div>
 
-      <div className="absolute top-5 left-8">
-        <input 
-          type="checkbox" 
-          checked={task.isSelected} 
-          onChange={() => onToggleSelect(task.id)}
-          className="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer"
-        />
-      </div>
-      
-      <div className="absolute top-4 right-4 flex items-center gap-2">
-        {task.isEdited && (
-          <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
-            Edited
-          </span>
-        )}
-        <button 
-          onClick={() => setIsRawEditMode(!isRawEditMode)}
-          className={cn(
-            "p-1.5 rounded-md transition-colors",
-            isRawEditMode ? "text-blue-600 bg-blue-50" : "text-gray-400 hover:text-blue-500 hover:bg-blue-50"
-          )}
-          title="Toggle Raw Edit"
-        >
-          <Code className="w-4 h-4" />
-        </button>
-        <button 
-          onClick={handleDelete}
-          className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-md transition-colors"
-          title="Delete Task"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
-      </div>
+      <div className="p-5 pl-12">
+        {/* Header: Identity & Priority */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => onToggleSelect(task.id)}
+              className={cn(
+                "w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-300",
+                task.isSelected 
+                  ? "bg-neon-cyan border-neon-cyan shadow-[0_0_15px_rgba(34,211,238,0.4)]" 
+                  : "border-slate-700 hover:border-slate-500 bg-slate-950/50"
+              )}
+            >
+              {task.isSelected && <CheckSquare className="w-4 h-4 text-slate-950 stroke-[3]" />}
+            </button>
+            <div className="flex items-center gap-2">
+              <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1.5">
+                <Hash className="w-3 h-3" /> OBJECTIVE {index + 1}
+              </span>
+              <select 
+                value={task.priority}
+                onChange={(e) => onUpdate(task.id, { priority: e.target.value })}
+                className={cn(
+                  "text-[9px] font-black uppercase tracking-[0.1em] px-2.5 py-0.5 rounded-full border transition-all duration-500 outline-none cursor-pointer appearance-none",
+                  currentPriorityStyle
+                )}
+              >
+                <option value="P0" className="bg-slate-900">🔴 P0 — CRITICAL</option>
+                <option value="P1" className="bg-slate-900">🟠 P1 — HIGH</option>
+                <option value="P2" className="bg-slate-900">🟡 P2 — MEDIUM</option>
+                <option value="P3" className="bg-slate-900">🟢 P3 — LOW</option>
+              </select>
+            </div>
+          </div>
 
-      <div className="ml-8">
-        <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-3">
-          <span>Task {index + 1} of {totalTasks}</span>
-          
-          <select 
-            value={task.priority}
-            onChange={(e) => onUpdate(task.id, { priority: e.target.value })}
-            className={cn(
-              "text-xs font-medium border-transparent rounded px-2 py-1 outline-none cursor-pointer shadow-sm transition-colors",
-              task.priority === 'P0' ? "text-white bg-gradient-to-r from-red-500 to-rose-600 animate-pulse" :
-              task.priority === 'P1' ? "text-white bg-gradient-to-r from-orange-500 to-amber-500" :
-              task.priority === 'P2' ? "text-white bg-gradient-to-r from-yellow-400 to-yellow-500" :
-              "text-white bg-gradient-to-r from-emerald-400 to-green-500"
+          <div className="flex items-center gap-1.5">
+            {task.isEdited && (
+              <span className="text-[8px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-full bg-neon-amber/10 text-neon-amber border border-neon-amber/30 mr-2">
+                MODIFIED
+              </span>
             )}
-          >
-            <option value="P0" className="bg-white text-gray-900">🔴 P0 — Critical</option>
-            <option value="P1" className="bg-white text-gray-900">🟠 P1 — High</option>
-            <option value="P2" className="bg-white text-gray-900">🟡 P2 — Medium</option>
-            <option value="P3" className="bg-white text-gray-900">🟢 P3 — Low</option>
-          </select>
+            <button 
+              onClick={() => setIsRawEditMode(!isRawEditMode)}
+              className={cn(
+                "p-2 rounded-xl transition-all",
+                isRawEditMode ? "bg-neon-cyan/20 text-neon-cyan shadow-[0_0_15px_rgba(34,211,238,0.2)]" : "text-slate-500 hover:text-neon-cyan hover:bg-slate-800"
+              )}
+              title="Matrix View"
+            >
+              <Code className="w-4 h-4" />
+            </button>
+            <button 
+              onClick={handleDelete}
+              className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all"
+              title="Purge Task"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
         </div>
-        
-        <div className="mb-4 group">
+
+        {/* Title Section */}
+        <div className="mb-5">
           {isEditingTitle ? (
             <input
               ref={titleInputRef}
@@ -160,62 +182,80 @@ export function TaskCard({ task, index, totalTasks, onUpdate, onDelete, onToggle
               onChange={(e) => setEditTitle(e.target.value)}
               onBlur={handleTitleSave}
               onKeyDown={handleTitleKeyDown}
-              className="text-xl font-semibold text-gray-900 w-full border-b-2 border-blue-500 outline-none bg-blue-50/50 px-1 py-0.5 rounded-t"
+              className="text-xl font-black text-slate-100 w-full bg-slate-950/50 border-b-2 border-neon-cyan outline-none px-2 py-1 rounded-t-xl transition-all placeholder-slate-700"
             />
           ) : (
             <h3 
               onClick={() => setIsEditingTitle(true)}
-              className="text-xl font-semibold text-gray-900 cursor-pointer flex items-center gap-2 hover:text-blue-700 transition-colors"
+              className="text-xl font-black text-slate-100 cursor-text flex items-center gap-3 group/title"
             >
-              {task.title}
-              <Edit2 className="w-4 h-4 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <span className="hover:text-neon-cyan transition-colors">{task.title}</span>
+              <Edit2 className="w-4 h-4 text-slate-700 opacity-0 group-hover/title:opacity-100 transition-opacity" />
             </h3>
           )}
         </div>
 
-        {isRawEditMode ? (
-          <div className="grid grid-cols-2 gap-4 border border-gray-200 rounded-lg overflow-hidden h-64">
-            <textarea
-              value={rawEditContent}
-              onChange={(e) => setRawEditContent(e.target.value)}
-              onBlur={handleRawSave}
-              className="w-full h-full p-3 text-sm font-mono bg-gray-50 text-gray-800 resize-none outline-none border-r border-gray-200"
-            />
-            <div className="w-full h-full p-3 overflow-y-auto bg-white markdown-body text-sm">
+        {/* Dynamic Content Area */}
+        <div className="relative mb-6">
+          {isRawEditMode ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-64 animate-fade-in-up">
+              <textarea
+                value={rawEditContent}
+                onChange={(e) => setRawEditContent(e.target.value)}
+                onBlur={handleRawSave}
+                placeholder="Neural source code..."
+                className="w-full h-full p-4 text-xs font-mono bg-slate-950/80 text-neon-cyan/80 border border-slate-800 rounded-2xl resize-none outline-none focus:border-neon-cyan/40 transition-all scrollbar-thin shadow-inner"
+              />
+              <div className="markdown-body bg-slate-900/40 rounded-2xl p-4 border border-slate-800/50 overflow-y-auto scrollbar-thin">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {rawEditContent}
+                </ReactMarkdown>
+              </div>
+            </div>
+          ) : (
+            <div className="markdown-body bg-slate-950/20 rounded-2xl p-1 transition-all">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {rawEditContent}
+                {displayMarkdown}
               </ReactMarkdown>
             </div>
-          </div>
-        ) : (
-          <div className="markdown-body">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {displayMarkdown}
-            </ReactMarkdown>
-          </div>
-        )}
+          )}
+        </div>
         
-        <div className="mt-4 pt-3 border-t border-gray-100 flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-600 whitespace-nowrap">📅 Date:</label>
+        {/* Footer: Date & Time Telemetry */}
+        <div className="pt-4 border-t border-slate-800/50 flex flex-wrap items-center gap-6">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[9px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1.5 ml-1">
+              <Calendar className="w-3 h-3 text-neon-cyan" /> DEPLOYMENT DATE
+            </label>
             <input 
               type="date" 
               value={task.dueDate}
               onChange={(e) => onUpdate(task.id, { dueDate: e.target.value })}
-              className="text-sm border border-gray-300 rounded-lg px-2.5 py-1.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-700 bg-white transition-colors"
+              className="w-full bg-slate-950/50 border border-slate-800 hover:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-200 outline-none focus:border-neon-cyan/40 transition-all cursor-pointer shadow-inner"
             />
           </div>
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-600 whitespace-nowrap">⏰ Time:</label>
-            <input 
-              type="time" 
-              value={task.dueTime}
-              onChange={(e) => onUpdate(task.id, { dueTime: e.target.value })}
-              className="text-sm border border-gray-300 rounded-lg px-2.5 py-1.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-700 bg-white transition-colors"
-            />
-            {!task.dueTime && (
-              <span className="text-xs text-gray-400 italic">No time set</span>
-            )}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[9px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1.5 ml-1">
+              <Clock className="w-3 h-3 text-neon-pink" /> PRECISION TIME
+            </label>
+            <div className="relative group/time">
+              <input 
+                type="time" 
+                value={task.dueTime}
+                onChange={(e) => onUpdate(task.id, { dueTime: e.target.value })}
+                className="w-full bg-slate-950/50 border border-slate-800 hover:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-200 outline-none focus:border-neon-pink/40 transition-all cursor-pointer shadow-inner pr-10"
+              />
+              {!task.dueTime && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-600 italic pointer-events-none group-hover/time:text-neon-pink/40 transition-colors">TBD</span>
+              )}
+            </div>
+          </div>
+          
+          <div className="ml-auto flex flex-col gap-1.5 items-end">
+             <label className="text-[9px] font-black text-slate-600 uppercase tracking-widest ml-1">TARGET CLUSTER</label>
+             <div className="text-[10px] font-black text-neon-cyan bg-neon-cyan/10 px-3 py-2 rounded-xl border border-neon-cyan/30 shadow-[0_0_10px_rgba(34,211,238,0.1)] uppercase tracking-wider">
+               {task.suggestedList || 'System Default'}
+             </div>
           </div>
         </div>
       </div>

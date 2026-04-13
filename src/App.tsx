@@ -19,6 +19,7 @@ import { generateCSV, generatePlainText } from './lib/utils';
 import { useTaskHistory } from './hooks/useTaskHistory';
 import { useGoogleLogin, googleLogout } from '@react-oauth/google';
 import { fetchTaskLists, createTaskList, insertTask } from './services/googleTasks';
+import { parseTasks, serializeTask } from './lib/taskEngine';
 
 const MIN_CHARS = 15;
 const MAX_CHARS = 100000;
@@ -27,68 +28,6 @@ const MAX_CHARS = 100000;
 function normalizePrefix(inputText: string) {
   return inputText.replace(/➖\s*/g, ' - ');
 }
-
-const parseTasks = (markdown: string): Task[] => {
-  let parsedTasks = markdown.split(/(?=## ✅ GOOGLE TASK OUTPUT)/i).filter(t => t.trim().length > 0);
-  if (parsedTasks.every(t => !t.includes('## ✅ GOOGLE TASK OUTPUT'))) {
-    parsedTasks = [markdown];
-  } else {
-    parsedTasks = parsedTasks.filter(t => t.includes('## ✅ GOOGLE TASK OUTPUT'));
-  }
-
-  return parsedTasks.map((raw, idx) => {
-    let title = 'Untitled Task';
-    const titleMatch = raw.match(/### 📌 TASK HEADER(?: \(Title\))?\n+([^\n]+)/);
-    if (titleMatch) {
-      title = titleMatch[1].trim();
-    }
-
-    let dueDate = '';
-    const dueMatch = raw.match(/due:\s*(\d{4}-\d{2}-\d{2})/i);
-    if (dueMatch) {
-      dueDate = dueMatch[1];
-    }
-
-    // Extract time — supports formats like "⏰ **Time:** 2:00 PM", "time: 14:00", "10:30 AM"
-    let dueTime = '';
-    const timeMatch24 = raw.match(/(?:time:|⏰\s*\*\*Time:\*\*)\s*(\d{1,2}:\d{2})(?:\s*(AM|PM))?/i);
-    if (timeMatch24) {
-      let hours = parseInt(timeMatch24[1].split(':')[0], 10);
-      const minutes = timeMatch24[1].split(':')[1];
-      const period = timeMatch24[2];
-      if (period) {
-        // Convert 12h to 24h
-        if (period.toUpperCase() === 'PM' && hours < 12) hours += 12;
-        if (period.toUpperCase() === 'AM' && hours === 12) hours = 0;
-      }
-      dueTime = `${hours.toString().padStart(2, '0')}:${minutes}`;
-    }
-
-    let priority = 'P3';
-    const priorityMatch = raw.match(/(🔴|🟠|🟡|🟢)\s*\*\*(P[0-3])/);
-    if (priorityMatch) {
-      priority = priorityMatch[2];
-    }
-
-    let suggestedList = 'Personal';
-    const listMatch = raw.match(/➖ \*\*List Name:\*\*\s*(Personal|Work|Shopping)/i);
-    if (listMatch) {
-      suggestedList = listMatch[1];
-    }
-
-    return {
-      id: `task-${Date.now()}-${idx}`,
-      title,
-      dueDate,
-      dueTime,
-      priority,
-      suggestedList,
-      rawContent: raw,
-      isSelected: true,
-      isEdited: false,
-    };
-  });
-};
 
 export default function App() {
   const [input, setInput] = useState('');
@@ -359,66 +298,71 @@ export default function App() {
     }
   };
 
-  const handleUpdateTask = (id: string, updates: Partial<Task>) => {
-    setTasks(prev => prev.map(t => {
-      if (t.id !== id) return t;
-      let newRaw = t.rawContent;
-      
-      if (updates.title !== undefined && updates.title !== t.title) {
-        newRaw = newRaw.replace(/(### 📌 TASK HEADER(?: \(Title\))?\n+)[^\n]+/, `$1${updates.title}`);
-      }
-      
-      if (updates.priority !== undefined && updates.priority !== t.priority) {
-        const priorityMap: Record<string, string> = {
-          'P0': '🔴 **P0 — Critical**',
-          'P1': '🟠 **P1 — High**',
-          'P2': '🟡 **P2 — Medium**',
-          'P3': '🟢 **P3 — Low**'
-        };
-        newRaw = newRaw.replace(/(🔴|🟠|🟡|🟢)\s*\*\*P[0-3][^*]*\*\*/, priorityMap[updates.priority]);
-      }
-      
-      // Determine the effective date and time after this update
-      const effectiveDate = updates.dueDate ?? t.dueDate;
-      const effectiveTime = updates.dueTime ?? t.dueTime;
-
-      if (updates.dueDate !== undefined && updates.dueDate !== t.dueDate) {
-        if (newRaw.match(/due:\s*\d{4}-\d{2}-\d{2}/i)) {
-          newRaw = newRaw.replace(/due:\s*\d{4}-\d{2}-\d{2}/i, `due: ${updates.dueDate}`);
-        } else {
-          newRaw = newRaw.replace(/(### 📅 DUE DATE & TIME\n)/i, `$1due: ${updates.dueDate}\n`);
-        }
-        const dateObj = new Date(updates.dueDate + 'T12:00:00');
-        if (!isNaN(dateObj.getTime())) {
-          const formattedDate = dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-          newRaw = newRaw.replace(/(📆 \*\*Date:\*\* )[^\n]+/, `$1${formattedDate}`);
-        }
-      }
-
-      if (updates.dueTime !== undefined && updates.dueTime !== t.dueTime) {
-        // Format time for display (e.g., "2:30 PM")
-        let displayTime = updates.dueTime;
-        if (updates.dueTime) {
-          const [h, m] = updates.dueTime.split(':').map(Number);
-          const period = h >= 12 ? 'PM' : 'AM';
-          const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
-          displayTime = `${displayHour}:${m.toString().padStart(2, '0')} ${period}`;
-        }
-
-        // Update or insert the time line in the raw markdown
-        if (newRaw.match(/⏰\s*\*\*Time:\*\*\s*[^\n]*/i)) {
-          newRaw = newRaw.replace(/⏰\s*\*\*Time:\*\*\s*[^\n]*/i, `⏰ **Time:** ${displayTime}`);
-        } else if (newRaw.match(/📆\s*\*\*Date:\*\*/i)) {
-          // Insert time line right after the date line
-          newRaw = newRaw.replace(/(📆\s*\*\*Date:\*\*\s*[^\n]*)/, `$1\n⏰ **Time:** ${displayTime}`);
-        } else if (newRaw.match(/### 📅 DUE DATE & TIME/i)) {
-          newRaw = newRaw.replace(/(### 📅 DUE DATE & TIME\n)/i, `$1⏰ **Time:** ${displayTime}\n`);
-        }
-      }
-      
-      return { ...t, ...updates, rawContent: newRaw, isEdited: true };
-    }));
+/**
+ * Reconstructs the raw markdown block for a task from its object state.
+ * This replaces the fragile regex-based patching logic.
+ */
+const serializeTask = (task: Task): string => {
+  const priorityMap: Record<string, string> = {
+    'P0': '🔴 **P0 — Critical**',
+    'P1': '🟠 **P1 — High**',
+    'P2': '🟡 **P2 — Medium**',
+    'P3': '🟢 **P3 — Low**'
   };
+
+  const priorityEmoji = priorityMap[task.priority] || priorityMap['P3'];
+  
+  // Format the date for the display line
+  let dateDisplay = 'Not specified';
+  if (task.dueDate) {
+    const dateObj = new Date(task.dueDate + 'T12:00:00');
+    if (!isNaN(dateObj.getTime())) {
+      dateDisplay = dateObj.toLocaleDateString('en-US', { 
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+      });
+    }
+  }
+
+  // Format time for display (e.g., "2:30 PM")
+  let timeDisplay = '';
+  if (task.dueTime) {
+    const [h, m] = task.dueTime.split(':').map(Number);
+    const period = h >= 12 ? 'PM' : 'AM';
+    const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    timeDisplay = `⏰ **Time:** ${displayHour}:${m.toString().padStart(2, '0')} ${period}`;
+  }
+
+  return `## ✅ GOOGLE TASK OUTPUT
+### 📌 TASK HEADER (Title)
+${task.title}
+
+### 📊 PRIORITY & STATUS
+Priority: ${priorityEmoji}
+Status: 📥 Queued for Processing
+
+### 📅 DUE DATE & TIME
+📆 **Date:** ${dateDisplay}
+${timeDisplay}
+due: ${task.dueDate || 'none'}
+
+### 📁 TARGET LIST
+➖ **List Name:** ${task.suggestedList}
+
+### 📝 TASK DESCRIPTION & NOTES
+[Automatically structured from input context]
+---
+`;
+};
+
+const handleUpdateTask = (id: string, updates: Partial<Task>) => {
+  setTasks(prev => prev.map(t => {
+    if (t.id !== id) return t;
+    const updatedTask = { ...t, ...updates, isEdited: true };
+    // Deterministically reconstruct the rawContent from the updated object state
+    updatedTask.rawContent = serializeTask(updatedTask);
+    return updatedTask;
+  }));
+};
 
   const handleDeleteTask = (id: string) => {
     setTasks(prev => prev.filter(t => t.id !== id));
@@ -529,25 +473,24 @@ export default function App() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 relative z-10">
         
         {/* Input Column */}
-        <div className="flex flex-col gap-4 h-[calc(100vh-8rem)]">
+        <div className="flex flex-col gap-4 h-[calc(100vh-8rem)] animate-fade-in-up">
           <ExampleChips onSelect={(text) => setInput(text)} />
           
           <div className={cn(
-            "flex-1 relative rounded-xl border bg-white shadow-sm overflow-hidden flex flex-col transition-all",
-            !isValid && inputLength > 0 ? "border-red-300 focus-within:ring-red-500" : "border-gray-200 focus-within:ring-blue-500",
-            "focus-within:ring-2 focus-within:border-transparent"
+            "flex-1 relative rounded-2xl glass-panel overflow-hidden flex flex-col transition-all duration-300",
+            !isValid && inputLength > 0 ? "border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.1)]" : "border-slate-800/50 focus-within:border-neon-cyan/50 focus-within:shadow-[0_0_30px_rgba(34,211,238,0.1)]",
           )}>
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Paste your unstructured notes, casual thoughts, meeting transcripts, or emails here..."
-              className="flex-1 w-full p-4 resize-none outline-none text-gray-700 bg-transparent"
+              placeholder="Paste unstructured notes, meeting transcripts, or drag images below..."
+              className="flex-1 w-full p-6 resize-none outline-none text-slate-200 bg-transparent font-mono text-sm placeholder-slate-600 scrollbar-thin"
             />
             
-            <div className="px-4 pb-2">
+            <div className="px-4 pb-2 bg-slate-950/30">
               <MultiFileUpload 
                 onTextExtracted={(text) => {
                   setInput(prev => prev + text);
@@ -560,49 +503,39 @@ export default function App() {
               />
             </div>
 
-            <div className="p-3 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-3">
-              <div className="flex items-center gap-3 text-xs">
+            <div className="p-4 bg-slate-900/50 border-t border-slate-800/50 flex flex-col sm:flex-row justify-between items-center gap-4">
+              <div className="flex items-center gap-4 text-[10px] font-bold tracking-widest uppercase">
                 <VoiceInput 
                   onTranscript={(text) => {
                     setInput(prev => prev + (prev && !prev.endsWith(' ') ? ' ' : '') + text);
                   }}
                 />
                 <span className={cn(
-                  "font-medium",
-                  isTooLong ? "text-red-500" : inputLength > MAX_CHARS * 0.9 ? "text-amber-500" : "text-gray-400"
+                  "transition-colors",
+                  isTooLong ? "text-red-400" : inputLength > MAX_CHARS * 0.9 ? "text-neon-amber" : "text-slate-500"
                 )}>
-                  {inputLength.toLocaleString()} / {MAX_CHARS.toLocaleString()} chars
+                  {inputLength.toLocaleString()} / {MAX_CHARS.toLocaleString()}
                 </span>
-                {isTooShort && (
-                  <span className="text-red-500 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" /> Too short
-                  </span>
-                )}
-                {isTooLong && (
-                  <span className="text-red-500 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" /> Too long
-                  </span>
-                )}
               </div>
 
               <button
                 onClick={handleProcess}
                 disabled={!isValid || isProcessing || !isOnline}
                 className={cn(
-                  "flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-all w-full sm:w-auto justify-center",
+                  "flex items-center gap-2 px-6 py-2.5 rounded-xl font-black uppercase tracking-widest transition-all w-full sm:w-auto justify-center active:scale-95 shadow-lg",
                   !isValid || isProcessing || !isOnline
-                    ? "bg-gray-200 text-gray-400 cursor-not-allowed" 
-                    : "bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow"
+                    ? "bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700" 
+                    : "bg-neon-cyan text-slate-950 hover:shadow-[0_0_25px_rgba(34,211,238,0.4)] hover:scale-[1.02]"
                 )}
               >
                 {isProcessing ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    ⏳ Processing...
+                    Analyzing...
                   </>
                 ) : (
                   <>
-                    Process Task
+                    Process Intelligence
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
@@ -619,23 +552,23 @@ export default function App() {
         </div>
 
         {/* Output Column */}
-        <div className="flex flex-col gap-4 h-[calc(100vh-8rem)]">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <h2 className="text-sm font-medium text-gray-700 uppercase tracking-wider flex items-center gap-2">
-              <CheckSquare className="w-4 h-4 text-green-500" />
-              Structured Output
+        <div className="flex flex-col gap-4 h-[calc(100vh-8rem)] animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-2">
+            <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-3">
+              <span className="w-2 h-2 rounded-full bg-neon-emerald shadow-[0_0_8px_rgba(16,185,129,0.6)]"></span>
+              Intelligence Output
               {tasks.length > 0 && (
-                <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full font-semibold ml-2">
-                  {tasks.length} tasks found
+                <span className="bg-neon-emerald/10 text-neon-emerald text-[10px] px-2 py-0.5 rounded-full border border-neon-emerald/30 font-black ml-2">
+                  {tasks.length} FOUND
                 </span>
               )}
             </h2>
             
             {tasks.length > 0 && !isProcessing && (
               <div className="flex items-center gap-2 flex-wrap">
-                <div className="flex items-center gap-1 mr-2 border-r border-gray-200 pr-3">
-                  <button onClick={undo} disabled={!canUndo} className={cn("p-1.5 rounded-md transition-colors", canUndo ? "text-gray-600 hover:bg-gray-100" : "text-gray-300 cursor-not-allowed")} title="Undo (Ctrl+Z)"><Undo className="w-4 h-4" /></button>
-                  <button onClick={redo} disabled={!canRedo} className={cn("p-1.5 rounded-md transition-colors", canRedo ? "text-gray-600 hover:bg-gray-100" : "text-gray-300 cursor-not-allowed")} title="Redo (Ctrl+Y)"><Redo className="w-4 h-4" /></button>
+                <div className="flex items-center gap-1 mr-2 border-r border-slate-800 pr-3">
+                  <button onClick={undo} disabled={!canUndo} className={cn("p-1.5 rounded-lg transition-all", canUndo ? "text-slate-400 hover:text-neon-cyan hover:bg-slate-800" : "text-slate-700 cursor-not-allowed")} title="Undo (Ctrl+Z)"><Undo className="w-4 h-4" /></button>
+                  <button onClick={redo} disabled={!canRedo} className={cn("p-1.5 rounded-lg transition-all", canRedo ? "text-slate-400 hover:text-neon-cyan hover:bg-slate-800" : "text-slate-700 cursor-not-allowed")} title="Redo (Ctrl+Y)"><Redo className="w-4 h-4" /></button>
                 </div>
                 <TaskListSelector 
                   onSend={handleSendToTasks} 
@@ -658,9 +591,9 @@ export default function App() {
             )}
           </div>
 
-          <div className="flex-1 rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden flex flex-col relative">
+          <div className="flex-1 rounded-2xl glass-panel overflow-hidden flex flex-col relative">
             {isProcessing && streamingContent ? (
-              <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50">
+              <div className="flex-1 overflow-y-auto p-6 bg-slate-950/30">
                 <div className="markdown-body opacity-80">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {streamingContent + ' ▌'}
@@ -668,34 +601,38 @@ export default function App() {
                 </div>
               </div>
             ) : isProcessing ? (
-              <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center">
-                <Loader2 className="w-10 h-10 text-blue-500 animate-spin mb-4" />
-                <p className="text-gray-600 font-medium animate-pulse">Analyzing and structuring tasks...</p>
+              <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md z-20 flex flex-col items-center justify-center">
+                <div className="relative">
+                  <div className="w-16 h-16 border-4 border-neon-cyan/20 border-t-neon-cyan rounded-full animate-spin"></div>
+                  <Loader2 className="w-8 h-8 text-neon-cyan absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                </div>
+                <p className="mt-6 text-slate-300 font-black uppercase tracking-[0.2em] text-xs animate-pulse">Neural Structuring...</p>
               </div>
             ) : error ? (
-              <div className="flex-1 p-6 flex flex-col items-center justify-center text-center bg-red-50/30">
-                <AlertCircle className="w-10 h-10 text-red-400 mb-3" />
-                <p className="text-red-600 font-medium mb-4 max-w-md">{error}</p>
+              <div className="flex-1 p-8 flex flex-col items-center justify-center text-center bg-red-500/5">
+                <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(239,68,68,0.1)]">
+                  <AlertCircle className="w-8 h-8 text-red-400" />
+                </div>
+                <p className="text-red-400 font-bold mb-6 max-w-md">{error}</p>
                 <button 
                   onClick={handleProcess}
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors font-medium shadow-sm"
+                  className="flex items-center gap-2 px-6 py-2.5 bg-slate-900 border border-red-500/30 text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all font-bold uppercase tracking-wider text-xs shadow-lg active:scale-95"
                 >
                   <RefreshCw className="w-4 h-4" />
-                  Retry Processing
+                  Reprocess
                 </button>
               </div>
             ) : tasks.length > 0 ? (
-              <div className="flex-1 overflow-y-auto p-4 bg-gray-50/50">
-                <div className="flex justify-between items-center mb-3 px-2">
-                  <div className="flex items-center gap-3 text-sm">
-                    <span className="text-gray-500 font-medium flex items-center gap-1"><ArrowUpDown className="w-3 h-3" /> Sort by:</span>
-                    <button onClick={() => handleSort('priority')} className={cn("font-medium hover:text-blue-600 transition-colors", sortConfig?.key === 'priority' ? "text-blue-600" : "text-gray-600")}>Priority {sortConfig?.key === 'priority' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</button>
-                    <button onClick={() => handleSort('dueDate')} className={cn("font-medium hover:text-blue-600 transition-colors", sortConfig?.key === 'dueDate' ? "text-blue-600" : "text-gray-600")}>Due Date {sortConfig?.key === 'dueDate' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</button>
-                    <button onClick={() => handleSort('suggestedList')} className={cn("font-medium hover:text-blue-600 transition-colors", sortConfig?.key === 'suggestedList' ? "text-blue-600" : "text-gray-600")}>List {sortConfig?.key === 'suggestedList' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</button>
+              <div className="flex-1 overflow-y-auto p-4 bg-slate-950/20">
+                <div className="flex justify-between items-center mb-4 px-3 py-2 rounded-xl bg-slate-900/50 border border-slate-800/50 shadow-inner">
+                  <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest">
+                    <span className="text-slate-500">Sort Matrix:</span>
+                    <button onClick={() => handleSort('priority')} className={cn("transition-all", sortConfig?.key === 'priority' ? "text-neon-cyan" : "text-slate-400 hover:text-slate-200")}>Priority {sortConfig?.key === 'priority' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</button>
+                    <button onClick={() => handleSort('dueDate')} className={cn("transition-all", sortConfig?.key === 'dueDate' ? "text-neon-cyan" : "text-slate-400 hover:text-slate-200")}>Date {sortConfig?.key === 'dueDate' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</button>
                   </div>
                   <button 
                     onClick={handleToggleAll} 
-                    className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                    className="text-[10px] font-black uppercase tracking-widest text-neon-cyan hover:text-white transition-colors"
                   >
                     {selectedCount === tasks.length ? 'Deselect All' : 'Select All'}
                   </button>

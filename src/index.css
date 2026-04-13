@@ -2,104 +2,90 @@
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  
+  /* Neon Accent Palette */
+  --color-neon-cyan: #22d3ee;
+  --color-neon-pink: #ec4899;
+  --color-neon-emerald: #10b981;
+  --color-neon-amber: #f59e0b;
+  
+  /* Animations */
+  --animate-fade-in-up: fade-in-up 0.5s ease-out forwards;
+  --animate-glow-pulse: glow-pulse 2s infinite alternate;
+
+  @keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes glow-pulse {
+    from { box-shadow: 0 0 5px rgba(34, 211, 238, 0.2); }
+    to { box-shadow: 0 0 20px rgba(34, 211, 238, 0.4); }
+  }
 }
 
 @layer base {
+  :root {
+    color-scheme: light dark;
+  }
+
   html.dark {
     color-scheme: dark;
   }
   
+  body {
+    @apply transition-colors duration-300 antialiased;
+  }
+
   html.dark body {
-    @apply bg-gray-900 text-gray-100;
-  }
-
-  html.dark .bg-white {
-    @apply bg-gray-800 border-gray-700;
-  }
-
-  html.dark .bg-gray-50 {
-    @apply bg-gray-900;
-  }
-
-  html.dark .text-gray-900 {
-    @apply text-gray-100;
-  }
-
-  html.dark .text-gray-800 {
-    @apply text-gray-200;
-  }
-
-  html.dark .text-gray-700 {
-    @apply text-gray-300;
-  }
-
-  html.dark .text-gray-600 {
-    @apply text-gray-300;
-  }
-
-  html.dark .text-gray-500 {
-    @apply text-gray-400;
-  }
-
-  html.dark .border-gray-200 {
-    @apply border-gray-700;
-  }
-
-  html.dark .border-gray-100 {
-    @apply border-gray-800;
+    @apply bg-slate-950 text-slate-100;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(34, 211, 238, 0.05) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.05) 0px, transparent 50%);
   }
 }
 
 @layer utilities {
-  .markdown-body {
-    @apply text-gray-800 text-sm leading-relaxed;
+  /* Glassmorphism System */
+  .glass-panel {
+    @apply bg-slate-900/70 backdrop-blur-xl border border-slate-800/50 shadow-2xl;
   }
   
-  html.dark .markdown-body {
-    @apply text-gray-300;
+  .glass-card {
+    @apply bg-slate-900/40 backdrop-blur-md border border-slate-800/30 transition-all duration-300;
+  }
+
+  .glass-input {
+    @apply bg-slate-950/50 border border-slate-800/50 focus:border-neon-cyan/50 focus:ring-2 focus:ring-neon-cyan/20 outline-none transition-all;
+  }
+
+  /* Neon Effects */
+  .neon-border-cyan { @apply border-neon-cyan/30 shadow-[0_0_15px_rgba(34,211,238,0.1)]; }
+  .neon-border-pink { @apply border-neon-pink/30 shadow-[0_0_15px_rgba(236,72,153,0.1)]; }
+  .neon-text-cyan { @apply text-neon-cyan shadow-[0_0_8px_rgba(34,211,238,0.3)]; }
+
+  /* Typography */
+  .markdown-body {
+    @apply text-slate-300 text-sm leading-relaxed;
   }
   
   .markdown-body h2 {
-    @apply text-xl font-semibold mt-6 mb-4 pb-2 border-b border-gray-200 text-gray-900;
-  }
-  
-  html.dark .markdown-body h2 {
-    @apply border-gray-700 text-gray-100;
+    @apply text-xl font-bold mt-6 mb-4 pb-2 border-b border-slate-800 text-slate-100;
   }
   
   .markdown-body h3 {
-    @apply text-lg font-medium mt-5 mb-3 text-gray-900;
-  }
-  
-  html.dark .markdown-body h3 {
-    @apply text-gray-100;
-  }
-  
-  .markdown-body p {
-    @apply mb-3;
-  }
-  
-  .markdown-body ul {
-    @apply list-none mb-4 space-y-1;
-  }
-  
-  .markdown-body li {
-    @apply flex items-start;
+    @apply text-lg font-bold mt-5 mb-3 text-neon-cyan/90;
   }
   
   .markdown-body strong {
-    @apply font-semibold text-gray-900;
+    @apply font-black text-slate-100;
   }
-  
-  html.dark .markdown-body strong {
-    @apply text-gray-100;
+
+  .markdown-body code {
+    @apply bg-slate-800 text-neon-amber px-1.5 py-0.5 rounded font-mono text-[0.9em] border border-slate-700/50;
   }
-  
-  .markdown-body hr {
-    @apply my-6 border-t border-gray-200;
-  }
-  
-  html.dark .markdown-body hr {
-    @apply border-gray-700;
+
+  /* Components Overlay */
+  .overlay-blur {
+    @apply fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40;
   }
 }
