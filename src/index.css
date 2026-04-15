@@ -1,91 +1,156 @@
 @import "tailwindcss";
 
 @theme {
+  /* 🎨 Font Stack */
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  
-  /* Neon Accent Palette */
-  --color-neon-cyan: #22d3ee;
-  --color-neon-pink: #ec4899;
-  --color-neon-emerald: #10b981;
-  --color-neon-amber: #f59e0b;
-  
-  /* Animations */
-  --animate-fade-in-up: fade-in-up 0.5s ease-out forwards;
-  --animate-glow-pulse: glow-pulse 2s infinite alternate;
+
+  /* 🌈 Joyful UI Color Palette */
+  --color-joy-blue:    #3B82F6;
+  --color-joy-indigo:  #6366F1;
+  --color-joy-purple:  #A855F7;
+  --color-joy-pink:    #EC4899;
+  --color-joy-coral:   #F97316;
+  --color-joy-amber:   #F59E0B;
+  --color-joy-emerald: #10B981;
+  --color-joy-teal:    #14B8A6;
+
+  /* ✨ Animation Tokens */
+  --animate-fade-in-up:  fade-in-up 0.4s ease-out forwards;
+  --animate-slide-down:  slide-down 0.3s ease-out forwards;
+  --animate-bounce-in:   bounce-in  0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+  --animate-wiggle:      wiggle     0.4s ease-in-out;
+  --animate-shimmer:     shimmer    1.5s infinite linear;
 
   @keyframes fade-in-up {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0);    }
   }
-  @keyframes glow-pulse {
-    from { box-shadow: 0 0 5px rgba(34, 211, 238, 0.2); }
-    to { box-shadow: 0 0 20px rgba(34, 211, 238, 0.4); }
+  @keyframes slide-down {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0);    }
+  }
+  @keyframes bounce-in {
+    0%   { opacity: 0; transform: scale(0.85); }
+    60%  { transform: scale(1.05); }
+    100% { opacity: 1; transform: scale(1);    }
+  }
+  @keyframes wiggle {
+    0%, 100% { transform: rotate(-3deg); }
+    50%       { transform: rotate(3deg);  }
+  }
+  @keyframes shimmer {
+    0%   { background-position: -200% center; }
+    100% { background-position:  200% center; }
+  }
+  @keyframes pop {
+    0%   { transform: scale(1);    }
+    50%  { transform: scale(1.12); }
+    100% { transform: scale(1);    }
   }
 }
 
+/* ───────────────────────────────────────────────────────────
+   🏗️ BASE LAYER — Clean Google-style light-mode foundation
+─────────────────────────────────────────────────────────── */
 @layer base {
   :root {
-    color-scheme: light dark;
+    color-scheme: light;
   }
 
-  html.dark {
-    color-scheme: dark;
-  }
-  
   body {
-    @apply transition-colors duration-300 antialiased;
-  }
-
-  html.dark body {
-    @apply bg-slate-950 text-slate-100;
-    background-image: 
-      radial-gradient(at 0% 0%, rgba(34, 211, 238, 0.05) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.05) 0px, transparent 50%);
+    @apply bg-gray-50 text-gray-900 antialiased;
+    background-image:
+      radial-gradient(at 0% 0%,   rgba(59,130,246,0.04) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(99,102,241,0.03) 0px, transparent 50%);
   }
 }
 
+/* ───────────────────────────────────────────────────────────
+   🧩 UTILITY LAYER — Joyful component helpers
+─────────────────────────────────────────────────────────── */
 @layer utilities {
-  /* Glassmorphism System */
-  .glass-panel {
-    @apply bg-slate-900/70 backdrop-blur-xl border border-slate-800/50 shadow-2xl;
-  }
-  
-  .glass-card {
-    @apply bg-slate-900/40 backdrop-blur-md border border-slate-800/30 transition-all duration-300;
-  }
 
-  .glass-input {
-    @apply bg-slate-950/50 border border-slate-800/50 focus:border-neon-cyan/50 focus:ring-2 focus:ring-neon-cyan/20 outline-none transition-all;
+  /* 🃏 Joyful Card — clean white with gentle shadow */
+  .joy-card {
+    @apply bg-white border border-gray-200 shadow-sm rounded-2xl transition-all duration-200;
+  }
+  .joy-card:hover {
+    @apply shadow-md border-gray-300;
   }
 
-  /* Neon Effects */
-  .neon-border-cyan { @apply border-neon-cyan/30 shadow-[0_0_15px_rgba(34,211,238,0.1)]; }
-  .neon-border-pink { @apply border-neon-pink/30 shadow-[0_0_15px_rgba(236,72,153,0.1)]; }
-  .neon-text-cyan { @apply text-neon-cyan shadow-[0_0_8px_rgba(34,211,238,0.3)]; }
+  /* 🎨 Joyful Input — clean focus ring */
+  .joy-input {
+    @apply bg-white border border-gray-300 rounded-xl outline-none
+           focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20
+           transition-all duration-200 text-gray-900 placeholder-gray-400;
+  }
 
-  /* Typography */
+  /* 🔘 Primary Button */
+  .joy-btn-primary {
+    @apply bg-blue-600 text-white font-semibold rounded-xl px-5 py-2.5
+           hover:bg-blue-700 active:scale-95 transition-all duration-150
+           shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* 👻 Ghost Button */
+  .joy-btn-ghost {
+    @apply text-gray-600 font-medium rounded-xl px-3 py-1.5
+           hover:bg-gray-100 hover:text-gray-900 transition-all duration-150;
+  }
+
+  /* 🏷️ Pill Badge */
+  .joy-pill {
+    @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold
+           border transition-all duration-150;
+  }
+
+  /* 🌈 Gradient text */
+  .gradient-text {
+    background: linear-gradient(135deg, #3B82F6, #6366F1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ✨ Shimmer loading skeleton */
+  .shimmer {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+    background-size: 200% auto;
+    animation: shimmer 1.5s infinite linear;
+  }
+
+  /* 📝 Markdown body — light-mode reading */
   .markdown-body {
-    @apply text-slate-300 text-sm leading-relaxed;
+    @apply text-gray-700 text-sm leading-relaxed;
   }
-  
   .markdown-body h2 {
-    @apply text-xl font-bold mt-6 mb-4 pb-2 border-b border-slate-800 text-slate-100;
+    @apply text-lg font-bold mt-6 mb-3 pb-2 border-b border-gray-200 text-gray-900;
   }
-  
   .markdown-body h3 {
-    @apply text-lg font-bold mt-5 mb-3 text-neon-cyan/90;
+    @apply text-base font-semibold mt-4 mb-2 text-blue-700;
   }
-  
+  .markdown-body p {
+    @apply mb-3;
+  }
+  .markdown-body ul {
+    @apply mb-4 list-none;
+  }
+  .markdown-body li {
+    @apply flex items-start gap-2;
+  }
   .markdown-body strong {
-    @apply font-black text-slate-100;
+    @apply font-semibold text-gray-900;
   }
-
+  .markdown-body hr {
+    @apply my-6 border-t border-gray-200;
+  }
   .markdown-body code {
-    @apply bg-slate-800 text-neon-amber px-1.5 py-0.5 rounded font-mono text-[0.9em] border border-slate-700/50;
+    @apply bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded font-mono text-[0.88em]
+           border border-blue-100;
   }
 
-  /* Components Overlay */
+  /* 🔄 Overlay */
   .overlay-blur {
-    @apply fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40;
+    @apply fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-40;
   }
 }

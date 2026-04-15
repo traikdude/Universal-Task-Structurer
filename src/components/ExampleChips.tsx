@@ -1,37 +1,36 @@
 import React from 'react';
 
-interface Example {
-  label: string;
-  icon: string;
-  text: string;
-  color: string;
-}
-
-const EXAMPLES: Example[] = [
+const EXAMPLES = [
   {
-    label: 'Meeting Notes',
-    icon: '📅',
-    color: 'hover:border-neon-cyan/50 hover:text-neon-cyan hover:bg-neon-cyan/10 hover:shadow-[0_0_15px_rgba(34,211,238,0.15)]',
-    text: 'Sync with the design team tomorrow at 10am to review the new onboarding wireframes. Make sure to bring feedback from last sprint. Follow up with Sarah about the copy revisions by Thursday EOD.'
+    emoji: '📅',
+    label: 'Plan Team Meeting',
+    text: 'Schedule team standup for tomorrow at 10am. Invite Alice and Bob. Prep the Q2 roadmap slides beforehand.',
+    color: 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 hover:border-blue-300 hover:shadow-blue-100',
   },
   {
-    label: 'Errands',
-    icon: '🛒',
-    color: 'hover:border-neon-emerald/50 hover:text-neon-emerald hover:bg-neon-emerald/10 hover:shadow-[0_0_15px_rgba(16,185,129,0.15)]',
-    text: 'Pick up milk, eggs, sourdough bread, and almond butter from Publix before Friday. Also need to return the Amazon package and drop off dry cleaning.'
+    emoji: '🛒',
+    label: 'Grocery Run',
+    text: 'Buy groceries: apples, almond milk, sourdough bread, eggs, spinach, and Greek yogurt.',
+    color: 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300 hover:shadow-emerald-100',
   },
   {
-    label: 'Project Tasks',
-    icon: '💼',
-    color: 'hover:border-neon-pink/50 hover:text-neon-pink hover:bg-neon-pink/10 hover:shadow-[0_0_15px_rgba(236,72,153,0.15)]',
-    text: 'Q2 strategy doc needs to be finalized by April 15th. Coordinate with Dev, Design, and Marketing leads. Schedule kick-off meeting for next Monday morning.'
+    emoji: '🚀',
+    label: 'Launch Checklist',
+    text: 'Before launch: write release notes, update README, tag v2.0.0 in GitHub, post on social media, notify beta users.',
+    color: 'bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100 hover:border-purple-300 hover:shadow-purple-100',
   },
   {
-    label: 'Home Tasks',
-    icon: '🏠',
-    color: 'hover:border-neon-amber/50 hover:text-neon-amber hover:bg-neon-amber/10 hover:shadow-[0_0_15px_rgba(245,158,11,0.15)]',
-    text: 'Fix the leaky bathroom faucet this weekend. Call the HOA about the parking permit. Renew car registration before May 1st.'
-  }
+    emoji: '🩺',
+    label: 'Healthcare Tasks',
+    text: 'Book dentist appointment, refill magnesium prescription, research cardiologists in my area for annual checkup.',
+    color: 'bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100 hover:border-rose-300 hover:shadow-rose-100',
+  },
+  {
+    emoji: '💡',
+    label: 'Feature Brainstorm',
+    text: 'New app ideas: dark mode toggle, keyboard shortcuts, offline support, and weekly digest email — prioritize by user impact.',
+    color: 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100 hover:border-amber-300 hover:shadow-amber-100',
+  },
 ];
 
 interface ExampleChipsProps {
@@ -40,19 +39,19 @@ interface ExampleChipsProps {
 
 export function ExampleChips({ onSelect }: ExampleChipsProps) {
   return (
-    <div className="flex flex-col gap-2 mb-1">
-      <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.25em]">
-        ⚡ Load an Example
-      </span>
+    <div className="flex flex-col gap-2">
+      <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest px-1">
+        ✨ Try an example
+      </p>
       <div className="flex flex-wrap gap-2">
-        {EXAMPLES.map((example, idx) => (
+        {EXAMPLES.map(({ emoji, label, text, color }) => (
           <button
-            key={idx}
-            onClick={() => onSelect(example.text)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 bg-slate-900/60 backdrop-blur border border-slate-700/50 rounded-full text-xs font-bold text-slate-400 transition-all duration-300 active:scale-95 ${example.color}`}
+            key={label}
+            onClick={() => onSelect(text)}
+            className={`joy-pill border shadow-sm hover:shadow-md active:scale-95 transition-all duration-200 cursor-pointer ${color}`}
           >
-            <span className="text-base leading-none">{example.icon}</span>
-            <span className="tracking-wide">{example.label}</span>
+            <span className="text-sm leading-none">{emoji}</span>
+            {label}
           </button>
         ))}
       </div>

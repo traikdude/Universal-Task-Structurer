@@ -434,39 +434,44 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
   const isValid = inputLength >= MIN_CHARS && !isTooLong;
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col font-sans" style={{backgroundImage: 'radial-gradient(at 5% 10%, rgba(34,211,238,0.07) 0px, transparent 50%), radial-gradient(at 95% 90%, rgba(236,72,153,0.06) 0px, transparent 50%), radial-gradient(at 50% 50%, rgba(16,185,129,0.03) 0px, transparent 70%)'}}>
-      {/* Header */}
-      <header className="bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/60 px-6 py-4 flex items-center justify-between sticky top-0 z-10 shadow-[0_4px_30px_rgba(0,0,0,0.3)]">
+    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+      {/* 🏠 Header */}
+      <header className="bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between sticky top-0 z-10 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-br from-neon-cyan to-blue-500 p-2 rounded-xl shadow-[0_0_20px_rgba(34,211,238,0.3)]">
-            <CheckSquare className="w-6 h-6 text-slate-950" />
+          <div className="bg-blue-600 p-2 rounded-xl shadow-sm">
+            <CheckSquare className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-black text-slate-100 tracking-tight">Universal Task Structurer</h1>
-            <p className="text-xs text-slate-500 font-medium">✨ Transform any text or image into a structured Google Task</p>
+            <h1 className="text-lg font-bold text-gray-900 tracking-tight">
+              ✅ Universal Task Structurer
+            </h1>
+            <p className="text-xs text-gray-500">✨ Transform any text or image into a structured Google Task 🚀</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           {accessToken ? (
-            <button onClick={handleLogout} className="text-xs font-bold text-slate-400 hover:text-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-800 transition-all">
-              Sign Out
+            <button onClick={handleLogout} className="joy-btn-ghost text-xs">
+              👋 Sign Out
             </button>
           ) : (
-            <button onClick={() => login()} className="text-xs font-black bg-neon-cyan/10 text-neon-cyan px-4 py-2 rounded-full border border-neon-cyan/30 hover:bg-neon-cyan hover:text-slate-950 transition-all duration-300 hover:shadow-[0_0_20px_rgba(34,211,238,0.35)] uppercase tracking-wider">
+            <button
+              onClick={() => login()}
+              className="flex items-center gap-2 bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-xl hover:bg-blue-700 active:scale-95 transition-all shadow-sm"
+            >
               🔗 Connect Google Tasks
             </button>
           )}
           <button
             onClick={() => setIsDarkMode(!isDarkMode)}
-            className="p-2 rounded-xl hover:bg-slate-800 text-slate-500 hover:text-slate-300 transition-all border border-transparent hover:border-slate-700"
+            className="p-2 rounded-xl hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-all"
             title="Toggle theme"
           >
-            {isDarkMode ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
+            {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
           {!isOnline && (
-            <div className="flex items-center gap-2 text-neon-amber bg-neon-amber/10 px-3 py-1.5 rounded-full text-xs font-black border border-neon-amber/30 uppercase tracking-wider">
+            <div className="flex items-center gap-1.5 text-amber-700 bg-amber-50 px-3 py-1.5 rounded-full text-xs font-semibold border border-amber-200">
               <WifiOff className="w-3.5 h-3.5" />
-              Offline
+              📵 Offline
             </div>
           )}
         </div>
@@ -480,17 +485,17 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
           <ExampleChips onSelect={(text) => setInput(text)} />
           
           <div className={cn(
-            "flex-1 relative rounded-2xl glass-panel overflow-hidden flex flex-col transition-all duration-300",
-            !isValid && inputLength > 0 ? "border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.1)]" : "border-slate-800/50 focus-within:border-neon-cyan/50 focus-within:shadow-[0_0_30px_rgba(34,211,238,0.1)]",
+            "flex-1 relative rounded-2xl joy-card overflow-hidden flex flex-col",
+            !isValid && inputLength > 0 ? "border-red-300 ring-2 ring-red-100" : "focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100",
           )}>
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="✏️  Paste your notes, meeting transcripts, to-do lists, or any unstructured text here...\n\nOr drop images & PDFs below for AI-powered OCR extraction 👇"
-              className="flex-1 w-full p-6 resize-none outline-none text-slate-200 bg-transparent font-mono text-sm placeholder-slate-400 scrollbar-thin leading-relaxed"
+              placeholder="✏️  Paste your notes, meeting transcripts, or to-do lists here...&#10;&#10;💡 Tip: You can also drop images & PDFs below for AI-powered OCR! 👇"
+              className="flex-1 w-full p-5 resize-none outline-none text-gray-800 bg-transparent text-sm placeholder-gray-400 leading-relaxed font-sans"
             />
             
-            <div className="px-4 pb-2 bg-slate-950/30">
+            <div className="px-4 pb-2 bg-gray-50 border-t border-gray-100">
               <MultiFileUpload 
                 onTextExtracted={(text) => {
                   setInput(prev => prev + text);
@@ -503,18 +508,18 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
               />
             </div>
 
-            <div className="p-4 bg-slate-900/50 border-t border-slate-800/50 flex flex-col sm:flex-row justify-between items-center gap-4">
-              <div className="flex items-center gap-4 text-[10px] font-bold tracking-widest uppercase">
+            <div className="p-4 bg-white border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-3">
+              <div className="flex items-center gap-3 text-[11px] text-gray-400">
                 <VoiceInput 
                   onTranscript={(text) => {
                     setInput(prev => prev + (prev && !prev.endsWith(' ') ? ' ' : '') + text);
                   }}
                 />
                 <span className={cn(
-                  "transition-colors",
-                  isTooLong ? "text-red-400" : inputLength > MAX_CHARS * 0.9 ? "text-neon-amber" : "text-slate-500"
+                  "font-mono",
+                  isTooLong ? "text-red-500" : inputLength > MAX_CHARS * 0.9 ? "text-amber-500" : "text-gray-400"
                 )}>
-                  {inputLength.toLocaleString()} / {MAX_CHARS.toLocaleString()}
+                  {inputLength.toLocaleString()} / {MAX_CHARS.toLocaleString()} chars
                 </span>
               </div>
 
@@ -522,20 +527,20 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
                 onClick={handleProcess}
                 disabled={!isValid || isProcessing || !isOnline}
                 className={cn(
-                  "flex items-center gap-2 px-6 py-2.5 rounded-xl font-black uppercase tracking-widest transition-all w-full sm:w-auto justify-center active:scale-95 shadow-lg",
+                  "flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all w-full sm:w-auto justify-center",
                   !isValid || isProcessing || !isOnline
-                    ? "bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700" 
-                    : "bg-neon-cyan text-slate-950 hover:shadow-[0_0_25px_rgba(34,211,238,0.4)] hover:scale-[1.02]"
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
+                    : "bg-blue-600 text-white hover:bg-blue-700 active:scale-95 shadow-sm hover:shadow-md"
                 )}
               >
                 {isProcessing ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Analyzing...
+                    🔄 Analyzing...
                   </>
                 ) : (
                   <>
-                    Process Intelligence
+                    ⚡ Process Intelligence
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
@@ -554,9 +559,8 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
         {/* Output Column */}
         <div className="flex flex-col gap-4 h-[calc(100vh-8rem)] animate-fade-in-up" style={{ animationDelay: '100ms' }}>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-2">
-            <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-3">
-              <span className="w-2 h-2 rounded-full bg-neon-emerald shadow-[0_0_8px_rgba(16,185,129,0.6)]"></span>
-              Intelligence Output
+            <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+              🧠 Intelligence Output
               {tasks.length > 0 && (
                 <span className="bg-neon-emerald/10 text-neon-emerald text-[10px] px-2 py-0.5 rounded-full border border-neon-emerald/30 font-black ml-2">
                   {tasks.length} FOUND
@@ -673,36 +677,37 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
                 </DragDropContext>
               </div>
             ) : (
-              <div className="flex-1 p-8 flex flex-col items-center justify-center text-center gap-6">
-                {/* Animated glow orb */}
-                <div className="relative">
-                  <div className="absolute inset-0 rounded-full bg-neon-cyan/10 blur-2xl animate-pulse" style={{width: '100px', height: '100px', transform: 'translate(-10%, -10%)'}} />
-                  <div className="relative w-20 h-20 rounded-3xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/60 flex items-center justify-center shadow-[0_0_30px_rgba(34,211,238,0.08)]">
-                    <span className="text-4xl">🧠</span>
-                  </div>
+              <div className="flex-1 p-8 flex flex-col items-center justify-center text-center gap-5">
+                {/* 🌟 Hero Icon */}
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-100 rounded-3xl flex items-center justify-center shadow-sm animate-bounce-in">
+                  <span className="text-4xl">🧠</span>
                 </div>
 
-                <div className="space-y-2">
-                  <h3 className="text-lg font-black text-slate-200 tracking-tight">Intelligence Output</h3>
-                  <p className="text-sm text-slate-500 max-w-xs leading-relaxed">
-                    Paste your notes on the left and click <span className="text-neon-cyan font-bold">Process Intelligence</span> to extract structured tasks.
+                <div className="space-y-1.5">
+                  <h3 className="text-lg font-bold text-gray-800">🎯 Ready to Structure!</h3>
+                  <p className="text-sm text-gray-500 max-w-xs leading-relaxed">
+                    Paste your unstructured notes on the left, then click
+                    <span className="font-semibold text-blue-600"> ⚡ Process Intelligence </span>
+                    to extract clean, actionable tasks! ✨
                   </p>
                 </div>
 
-                {/* Step hints */}
-                <div className="flex flex-col gap-2.5 w-full max-w-xs">
+                {/* 📋 Step Cards */}
+                <div className="flex flex-col gap-2 w-full max-w-xs">
                   {[
-                    { emoji: '✏️', label: 'Paste notes or text' },
-                    { emoji: '🖼️', label: 'Or drop an image / PDF' },
-                    { emoji: '⚡', label: 'Click Process Intelligence' },
-                    { emoji: '📤', label: 'Send to Google Tasks' },
-                  ].map(({ emoji, label }, i) => (
-                    <div key={i} className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-slate-900/60 border border-slate-800/50 text-left">
-                      <span className="text-xl w-7 text-center">{emoji}</span>
-                      <span className="text-xs font-bold text-slate-400 tracking-wide">{label}</span>
+                    { emoji: '✏️', label: 'Paste notes, lists, or meeting transcripts', color: 'bg-blue-50 border-blue-100' },
+                    { emoji: '🖼️', label: 'Or upload images & PDFs for OCR magic!',     color: 'bg-purple-50 border-purple-100' },
+                    { emoji: '⚡', label: 'Click Process Intelligence',                  color: 'bg-amber-50 border-amber-100' },
+                    { emoji: '📤', label: 'Send structured tasks to Google Tasks 🎉',   color: 'bg-emerald-50 border-emerald-100' },
+                  ].map(({ emoji, label, color }, i) => (
+                    <div key={i} className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border text-left ${color}`}>
+                      <span className="text-lg w-6 text-center shrink-0">{emoji}</span>
+                      <span className="text-xs font-medium text-gray-600">{label}</span>
                     </div>
                   ))}
                 </div>
+
+                <p className="text-[10px] text-gray-400 mt-1">🌈 Powered by Gemini AI · Built with ❤️</p>
               </div>
             )}
           </div>
