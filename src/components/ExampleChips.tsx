@@ -43,7 +43,7 @@ export function ExampleChips({ onSelect }: ExampleChipsProps) {
       <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest px-1">
         ✨ Try an example
       </p>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible scrollbar-none">
         {EXAMPLES.map(({ emoji, label, text, color }) => (
           <button
             key={label}

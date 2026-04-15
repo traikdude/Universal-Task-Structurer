@@ -4,6 +4,9 @@
   /* 🎨 Font Stack */
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 
+  /* 📐 Custom Breakpoints (Tailwind v4) */
+  --breakpoint-xs: 30rem;   /* 480px — fine-grained mobile control */
+
   /* 🌈 Joyful UI Color Palette */
   --color-joy-blue:    #3B82F6;
   --color-joy-indigo:  #6366F1;
@@ -152,5 +155,24 @@
   /* 🔄 Overlay */
   .overlay-blur {
     @apply fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-40;
+  }
+
+  /* 📱 Mobile — hide scrollbar for horizontal chip row */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* 📱 Safe-area inset for iPhone notch/home-bar */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* 📱 Touch target — minimum 44px for tap comfort */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
   }
 }

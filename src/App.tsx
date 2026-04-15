@@ -433,55 +433,100 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
   const isTooLong = inputLength > MAX_CHARS;
   const isValid = inputLength >= MIN_CHARS && !isTooLong;
 
+  const [activeTab, setActiveTab] = React.useState<'input' | 'output'>('input');
+
+  // 📱 Mobile UX: auto-switch to Output tab when processing completes with results
+  React.useEffect(() => {
+    if (!isProcessing && tasks.length > 0) {
+      setActiveTab('output');
+    }
+  }, [isProcessing, tasks.length]);
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
       {/* 🏠 Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between sticky top-0 z-10 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="bg-blue-600 p-2 rounded-xl shadow-sm">
-            <CheckSquare className="w-5 h-5 text-white" />
+      <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between sticky top-0 z-10 shadow-sm">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className="bg-blue-600 p-1.5 sm:p-2 rounded-xl shadow-sm shrink-0">
+            <CheckSquare className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
           </div>
-          <div>
-            <h1 className="text-lg font-bold text-gray-900 tracking-tight">
-              ✅ Universal Task Structurer
+          <div className="min-w-0">
+            <h1 className="text-base sm:text-lg font-bold text-gray-900 tracking-tight truncate">
+              ✅ <span className="hidden xs:inline">Universal </span>Task Structurer
             </h1>
-            <p className="text-xs text-gray-500">✨ Transform any text or image into a structured Google Task 🚀</p>
+            <p className="text-[10px] sm:text-xs text-gray-500 hidden sm:block">✨ Transform any text or image into a structured Google Task 🚀</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          {!isOnline && (
+            <div className="flex items-center gap-1 text-amber-700 bg-amber-50 px-2 py-1 rounded-full text-[10px] font-semibold border border-amber-200">
+              <WifiOff className="w-3 h-3" />
+              <span className="hidden sm:inline">📵 Offline</span>
+            </div>
+          )}
           {accessToken ? (
-            <button onClick={handleLogout} className="joy-btn-ghost text-xs">
-              👋 Sign Out
+            <button onClick={handleLogout} className="joy-btn-ghost text-xs px-2 py-1.5">
+              <span className="hidden sm:inline">👋 </span>Sign Out
             </button>
           ) : (
             <button
               onClick={() => login()}
-              className="flex items-center gap-2 bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-xl hover:bg-blue-700 active:scale-95 transition-all shadow-sm"
+              className="flex items-center gap-1.5 bg-blue-600 text-white text-[11px] sm:text-xs font-semibold px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl hover:bg-blue-700 active:scale-95 transition-all shadow-sm"
             >
-              🔗 Connect Google Tasks
+              🔗 <span className="hidden sm:inline">Connect </span>Tasks
             </button>
           )}
           <button
             onClick={() => setIsDarkMode(!isDarkMode)}
-            className="p-2 rounded-xl hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-all"
+            className="p-1.5 sm:p-2 rounded-xl hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-all"
             title="Toggle theme"
           >
             {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
-          {!isOnline && (
-            <div className="flex items-center gap-1.5 text-amber-700 bg-amber-50 px-3 py-1.5 rounded-full text-xs font-semibold border border-amber-200">
-              <WifiOff className="w-3.5 h-3.5" />
-              📵 Offline
-            </div>
-          )}
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 relative z-10">
+      {/* 📱 Mobile Tab Bar — only visible on small screens */}
+      <div className="lg:hidden bg-white border-b border-gray-200 flex sticky top-[56px] z-10 shadow-sm">
+        <button
+          onClick={() => setActiveTab('input')}
+          className={cn(
+            'flex-1 py-2.5 text-sm font-semibold flex items-center justify-center gap-2 border-b-2 transition-all',
+            activeTab === 'input'
+              ? 'border-blue-600 text-blue-600 bg-blue-50/50'
+              : 'border-transparent text-gray-500 hover:text-gray-700',
+          )}
+        >
+          ✏️ Input
+        </button>
+        <button
+          onClick={() => setActiveTab('output')}
+          className={cn(
+            'flex-1 py-2.5 text-sm font-semibold flex items-center justify-center gap-2 border-b-2 transition-all',
+            activeTab === 'output'
+              ? 'border-blue-600 text-blue-600 bg-blue-50/50'
+              : 'border-transparent text-gray-500 hover:text-gray-700',
+          )}
+        >
+          🧠 Output
+          {tasks.length > 0 && (
+            <span className="bg-blue-100 text-blue-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+              {tasks.length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-4 md:p-6 lg:grid lg:grid-cols-2 gap-6 relative z-10">
         
         {/* Input Column */}
-        <div className="flex flex-col gap-4 h-[calc(100vh-8rem)] animate-fade-in-up">
+        <div className={cn(
+          "flex flex-col gap-4 animate-fade-in-up",
+          /* Mobile: show only when input tab active, full natural height */
+          "lg:h-[calc(100vh-8rem)]",
+          activeTab === 'input' ? 'flex' : 'hidden lg:flex',
+        )}>
           <ExampleChips onSelect={(text) => setInput(text)} />
           
           <div className={cn(
@@ -491,8 +536,10 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="✏️  Paste your notes, meeting transcripts, or to-do lists here...&#10;&#10;💡 Tip: You can also drop images & PDFs below for AI-powered OCR! 👇"
-              className="flex-1 w-full p-5 resize-none outline-none text-gray-800 bg-transparent text-sm placeholder-gray-400 leading-relaxed font-sans"
+              placeholder="✏️  Paste your notes, meeting transcripts, or to-do lists here...
+
+💡 Tip: You can also drop images & PDFs below for AI-powered OCR! 👇"
+              className="w-full p-4 sm:p-5 resize-none outline-none text-gray-800 bg-transparent text-sm placeholder-gray-400 leading-relaxed font-sans min-h-[180px] lg:flex-1"
             />
             
             <div className="px-4 pb-2 bg-gray-50 border-t border-gray-100">
@@ -557,22 +604,29 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
         </div>
 
         {/* Output Column */}
-        <div className="flex flex-col gap-4 h-[calc(100vh-8rem)] animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-2">
+        <div
+          className={cn(
+            "flex flex-col gap-4 animate-fade-in-up",
+            "lg:h-[calc(100vh-8rem)]",
+            activeTab === 'output' ? 'flex' : 'hidden lg:flex',
+          )}
+          style={{ animationDelay: '100ms' }}
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
             <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2">
               🧠 Intelligence Output
               {tasks.length > 0 && (
-                <span className="bg-neon-emerald/10 text-neon-emerald text-[10px] px-2 py-0.5 rounded-full border border-neon-emerald/30 font-black ml-2">
-                  {tasks.length} FOUND
+                <span className="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-0.5 rounded-full font-bold ml-1">
+                  {tasks.length} found
                 </span>
               )}
             </h2>
             
             {tasks.length > 0 && !isProcessing && (
               <div className="flex items-center gap-2 flex-wrap">
-                <div className="flex items-center gap-1 mr-2 border-r border-slate-800 pr-3">
-                  <button onClick={undo} disabled={!canUndo} className={cn("p-1.5 rounded-lg transition-all", canUndo ? "text-slate-400 hover:text-neon-cyan hover:bg-slate-800" : "text-slate-700 cursor-not-allowed")} title="Undo (Ctrl+Z)"><Undo className="w-4 h-4" /></button>
-                  <button onClick={redo} disabled={!canRedo} className={cn("p-1.5 rounded-lg transition-all", canRedo ? "text-slate-400 hover:text-neon-cyan hover:bg-slate-800" : "text-slate-700 cursor-not-allowed")} title="Redo (Ctrl+Y)"><Redo className="w-4 h-4" /></button>
+                <div className="flex items-center gap-1 mr-2 border-r border-gray-200 pr-3">
+                  <button onClick={undo} disabled={!canUndo} className={cn("p-1.5 rounded-lg transition-all", canUndo ? "text-gray-500 hover:text-blue-600 hover:bg-blue-50" : "text-gray-300 cursor-not-allowed")} title="Undo (Ctrl+Z)"><Undo className="w-4 h-4" /></button>
+                  <button onClick={redo} disabled={!canRedo} className={cn("p-1.5 rounded-lg transition-all", canRedo ? "text-gray-500 hover:text-blue-600 hover:bg-blue-50" : "text-gray-300 cursor-not-allowed")} title="Redo (Ctrl+Y)"><Redo className="w-4 h-4" /></button>
                 </div>
                 <TaskListSelector 
                   onSend={handleSendToTasks} 
@@ -595,9 +649,9 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
             )}
           </div>
 
-          <div className="flex-1 rounded-2xl glass-panel overflow-hidden flex flex-col relative">
+          <div className="flex-1 rounded-2xl joy-card overflow-hidden flex flex-col relative min-h-[400px] lg:min-h-0">
             {isProcessing && streamingContent ? (
-              <div className="flex-1 overflow-y-auto p-6 bg-slate-950/30">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-white">
                 <div className="markdown-body opacity-80">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {streamingContent + ' ▌'}
@@ -605,40 +659,40 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
                 </div>
               </div>
             ) : isProcessing ? (
-              <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md z-20 flex flex-col items-center justify-center">
+              <div className="absolute inset-0 bg-white/90 backdrop-blur-md z-20 flex flex-col items-center justify-center gap-4">
                 <div className="relative">
-                  <div className="w-16 h-16 border-4 border-neon-cyan/20 border-t-neon-cyan rounded-full animate-spin"></div>
-                  <Loader2 className="w-8 h-8 text-neon-cyan absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                  <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
+                  <Loader2 className="w-8 h-8 text-blue-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                 </div>
-                <p className="mt-6 text-slate-300 font-black uppercase tracking-[0.2em] text-xs animate-pulse">Neural Structuring...</p>
+                <p className="text-gray-500 font-semibold text-sm animate-pulse">🧠 Analyzing your notes...</p>
               </div>
             ) : error ? (
-              <div className="flex-1 p-8 flex flex-col items-center justify-center text-center bg-red-500/5">
-                <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(239,68,68,0.1)]">
+              <div className="flex-1 p-8 flex flex-col items-center justify-center text-center">
+                <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center mb-4">
                   <AlertCircle className="w-8 h-8 text-red-400" />
                 </div>
-                <p className="text-red-400 font-bold mb-6 max-w-md">{error}</p>
-                <button 
+                <p className="text-red-500 font-semibold mb-6 max-w-md text-sm">{error}</p>
+                <button
                   onClick={handleProcess}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-slate-900 border border-red-500/30 text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all font-bold uppercase tracking-wider text-xs shadow-lg active:scale-95"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-red-50 border border-red-200 text-red-600 rounded-xl hover:bg-red-500 hover:text-white hover:border-red-500 transition-all font-semibold text-sm active:scale-95"
                 >
                   <RefreshCw className="w-4 h-4" />
-                  Reprocess
+                  🔄 Try Again
                 </button>
               </div>
             ) : tasks.length > 0 ? (
-              <div className="flex-1 overflow-y-auto p-4 bg-slate-950/20">
-                <div className="flex justify-between items-center mb-4 px-3 py-2 rounded-xl bg-slate-900/50 border border-slate-800/50 shadow-inner">
-                  <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest">
-                    <span className="text-slate-500">Sort Matrix:</span>
-                    <button onClick={() => handleSort('priority')} className={cn("transition-all", sortConfig?.key === 'priority' ? "text-neon-cyan" : "text-slate-400 hover:text-slate-200")}>Priority {sortConfig?.key === 'priority' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</button>
-                    <button onClick={() => handleSort('dueDate')} className={cn("transition-all", sortConfig?.key === 'dueDate' ? "text-neon-cyan" : "text-slate-400 hover:text-slate-200")}>Date {sortConfig?.key === 'dueDate' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</button>
+              <div className="flex-1 overflow-y-auto p-3 sm:p-4">
+                <div className="flex justify-between items-center mb-3 px-3 py-2 rounded-xl bg-gray-50 border border-gray-200">
+                  <div className="flex items-center gap-3 text-[11px] font-semibold text-gray-500">
+                    <span>Sort:</span>
+                    <button onClick={() => handleSort('priority')} className={cn("transition-all px-2 py-0.5 rounded-lg", sortConfig?.key === 'priority' ? "text-blue-600 bg-blue-50" : "text-gray-400 hover:text-gray-700 hover:bg-gray-100")}>🔴 Priority {sortConfig?.key === 'priority' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</button>
+                    <button onClick={() => handleSort('dueDate')} className={cn("transition-all px-2 py-0.5 rounded-lg", sortConfig?.key === 'dueDate' ? "text-blue-600 bg-blue-50" : "text-gray-400 hover:text-gray-700 hover:bg-gray-100")}>📅 Date {sortConfig?.key === 'dueDate' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</button>
                   </div>
-                  <button 
-                    onClick={handleToggleAll} 
-                    className="text-[10px] font-black uppercase tracking-widest text-neon-cyan hover:text-white transition-colors"
+                  <button
+                    onClick={handleToggleAll}
+                    className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 transition-colors px-2 py-0.5 rounded-lg hover:bg-blue-50"
                   >
-                    {selectedCount === tasks.length ? 'Deselect All' : 'Select All'}
+                    {selectedCount === tasks.length ? '☑️ Deselect All' : '✅ Select All'}
                   </button>
                 </div>
                 
