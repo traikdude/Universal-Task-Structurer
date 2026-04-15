@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Image as ImageIcon, X, UploadCloud, FileText, Loader2, Zap } from 'lucide-react';
+import { Image as ImageIcon, X, FileText, Loader2, Zap, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { cn } from '../lib/utils';
 import Tesseract from 'tesseract.js';
 import * as pdfjsLib from 'pdfjs-dist';
@@ -98,57 +98,85 @@ export function MultiFileUpload({ onTextExtracted }: MultiFileUploadProps) {
   };
 
   return (
-    <div className="mt-4 mb-2 space-y-3">
+    <div className="mt-3 mb-2 space-y-3">
+      {/* Drop Zone */}
       <div
         {...getRootProps()}
         className={cn(
           "relative group cursor-pointer rounded-2xl border-2 border-dashed transition-all duration-500 overflow-hidden",
-          isDragActive 
-            ? "border-neon-cyan bg-neon-cyan/10 shadow-[0_0_30px_rgba(34,211,238,0.2)]" 
-            : "border-slate-800 bg-slate-950/40 hover:border-slate-700 hover:bg-slate-900/40",
+          isDragActive
+            ? "border-neon-cyan bg-neon-cyan/15 shadow-[0_0_35px_rgba(34,211,238,0.25)] scale-[1.01]"
+            : "border-slate-600/60 bg-gradient-to-br from-slate-800/60 to-slate-900/60 hover:border-neon-cyan/40 hover:bg-slate-800/80 hover:shadow-[0_0_20px_rgba(34,211,238,0.1)]",
           isAnyProcessing && "cursor-default"
         )}
       >
-        {/* High-Magic Scanner Animation */}
+        {/* Scanner line animation */}
         <AnimatePresence>
           {files.some(f => f.status === 'processing') && (
-            <motion.div 
+            <motion.div
               initial={{ top: '-10%' }}
               animate={{ top: '110%' }}
               exit={{ opacity: 0 }}
               transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-neon-cyan to-transparent shadow-[0_0_15px_rgba(34,211,238,0.8)] z-10 pointer-events-none"
+              className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-neon-cyan to-transparent shadow-[0_0_15px_rgba(34,211,238,0.8)] z-10 pointer-events-none"
             />
           )}
         </AnimatePresence>
 
         <input {...getInputProps()} />
-        <div className="p-6 flex flex-col items-center justify-center text-center gap-3">
+
+        <div className="p-5 flex flex-col items-center justify-center text-center gap-3">
+          {/* Icon */}
           <div className={cn(
             "p-3 rounded-2xl transition-all duration-500",
-            isDragActive ? "bg-neon-cyan text-slate-950 scale-110" : "bg-slate-900 text-slate-500 group-hover:text-neon-cyan group-hover:scale-105 shadow-inner"
+            isDragActive
+              ? "bg-neon-cyan text-slate-950 scale-125 shadow-[0_0_25px_rgba(34,211,238,0.5)]"
+              : "bg-gradient-to-br from-slate-700 to-slate-800 text-neon-cyan group-hover:scale-110 group-hover:shadow-[0_0_15px_rgba(34,211,238,0.3)] border border-slate-600/60"
           )}>
-            {isDragActive ? <Zap className="w-6 h-6 fill-current" /> : <UploadCloud className="w-6 h-6" />}
+            {isDragActive
+              ? <Zap className="w-6 h-6 fill-current" />
+              : <span className="text-2xl leading-none">🧠</span>
+            }
           </div>
+
+          {/* Text */}
           <div>
-            <p className="text-xs font-black text-slate-300 uppercase tracking-[0.2em]">
-              {isDragActive ? "Drop to Scan" : "Neural Data Intake"}
+            <p className={cn(
+              "text-sm font-black uppercase tracking-[0.2em] transition-colors duration-300",
+              isDragActive ? "text-neon-cyan" : "text-slate-200 group-hover:text-neon-cyan"
+            )}>
+              {isDragActive ? "⚡ Drop to Scan!" : "🖼️ Neural Data Intake"}
             </p>
-            <p className="text-[10px] font-bold text-slate-600 mt-1 uppercase tracking-widest">
-              Drop Images or PDFs for Intelligent OCR
+            <p className="text-[10px] font-bold text-slate-500 mt-1 uppercase tracking-widest group-hover:text-slate-400 transition-colors">
+              Drop images or PDFs for intelligent OCR
             </p>
           </div>
+
+          {/* Hint chips */}
+          {!isDragActive && (
+            <div className="flex items-center gap-3 text-[9px] font-black text-slate-600 uppercase tracking-widest mt-1">
+              <span className="flex items-center gap-1 bg-slate-800/80 px-2 py-1 rounded-full border border-slate-700/50">
+                📋 Whiteboards
+              </span>
+              <span className="flex items-center gap-1 bg-slate-800/80 px-2 py-1 rounded-full border border-slate-700/50">
+                🧾 Receipts
+              </span>
+              <span className="flex items-center gap-1 bg-slate-800/80 px-2 py-1 rounded-full border border-slate-700/50">
+                📝 Handwritten
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
       {/* File Status Grid */}
       <AnimatePresence>
         {files.length > 0 && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+            className="grid grid-cols-1 sm:grid-cols-2 gap-2"
           >
             {files.map((file) => (
               <motion.div
@@ -156,36 +184,61 @@ export function MultiFileUpload({ onTextExtracted }: MultiFileUploadProps) {
                 key={file.id}
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="glass-card rounded-xl p-3 flex items-center gap-3 border border-slate-800/50 relative overflow-hidden"
+                className="relative rounded-xl p-3 flex items-center gap-3 overflow-hidden border transition-all duration-300"
+                style={{
+                  background: file.status === 'completed'
+                    ? 'rgba(16,185,129,0.08)'
+                    : file.status === 'error'
+                    ? 'rgba(239,68,68,0.08)'
+                    : 'rgba(15,23,42,0.70)',
+                  borderColor: file.status === 'completed'
+                    ? 'rgba(16,185,129,0.3)'
+                    : file.status === 'error'
+                    ? 'rgba(239,68,68,0.3)'
+                    : 'rgba(51,65,85,0.5)',
+                }}
               >
-                {/* Progress Background */}
-                <div 
-                  className="absolute inset-0 bg-neon-cyan/5 transition-all duration-500 ease-out" 
+                {/* Progress background fill */}
+                <div
+                  className="absolute inset-0 bg-neon-cyan/5 transition-all duration-500 ease-out"
                   style={{ width: `${file.progress}%` }}
                 />
 
+                {/* File type icon */}
                 <div className={cn(
-                  "p-2 rounded-lg border",
+                  "p-2 rounded-lg border flex-shrink-0 z-10",
                   file.status === 'completed' ? "bg-neon-emerald/10 border-neon-emerald/30 text-neon-emerald" :
                   file.status === 'error' ? "bg-red-500/10 border-red-500/30 text-red-400" :
-                  "bg-slate-900 border-slate-800 text-slate-500"
+                  "bg-slate-900 border-slate-700 text-slate-400"
                 )}>
-                  {file.type === 'pdf' ? <FileText className="w-4 h-4" /> : <ImageIcon className="w-4 h-4" />}
+                  {file.status === 'completed'
+                    ? <CheckCircle2 className="w-4 h-4" />
+                    : file.status === 'error'
+                    ? <AlertTriangle className="w-4 h-4" />
+                    : file.type === 'pdf'
+                    ? <FileText className="w-4 h-4" />
+                    : <ImageIcon className="w-4 h-4" />
+                  }
                 </div>
-                
+
+                {/* File name + progress */}
                 <div className="flex-1 min-w-0 z-10">
-                  <p className="text-[10px] font-black text-slate-200 truncate uppercase tracking-tight">{file.name}</p>
-                  <div className="flex items-center gap-2 mt-1">
+                  <p className="text-[10px] font-black text-slate-200 truncate tracking-tight">{file.name}</p>
+                  <div className="flex items-center gap-2 mt-1.5">
                     <div className="flex-1 h-1 bg-slate-800 rounded-full overflow-hidden">
-                      <div 
+                      <div
                         className={cn(
-                          "h-full transition-all duration-500",
-                          file.status === 'error' ? "bg-red-500" : "bg-neon-cyan"
+                          "h-full transition-all duration-500 rounded-full",
+                          file.status === 'error' ? "bg-red-500" :
+                          file.status === 'completed' ? "bg-neon-emerald" :
+                          "bg-neon-cyan"
                         )}
                         style={{ width: `${file.progress}%` }}
                       />
                     </div>
-                    <span className="text-[9px] font-mono text-slate-500 w-8 text-right">{file.progress}%</span>
+                    <span className="text-[9px] font-mono text-slate-500 w-8 text-right">
+                      {file.status === 'completed' ? '✓' : file.status === 'error' ? '✗' : `${file.progress}%`}
+                    </span>
                   </div>
                 </div>
 
@@ -200,14 +253,6 @@ export function MultiFileUpload({ onTextExtracted }: MultiFileUploadProps) {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <div className="flex items-center justify-center gap-4 text-[9px] font-black text-slate-700 uppercase tracking-[0.2em] pt-1">
-        <span className="flex items-center gap-1.5"><ImageIcon className="w-3 h-3" /> Visuals</span>
-        <span className="text-slate-800">/</span>
-        <span className="flex items-center gap-1.5"><FileText className="w-3 h-3" /> Docs</span>
-        <span className="text-slate-800">/</span>
-        <span className="text-neon-cyan/40">OCR Intelligence</span>
-      </div>
     </div>
   );
 }

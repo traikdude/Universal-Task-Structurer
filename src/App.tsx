@@ -434,39 +434,39 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
   const isValid = inputLength >= MIN_CHARS && !isTooLong;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col font-sans transition-colors duration-200">
+    <div className="min-h-screen bg-slate-950 flex flex-col font-sans" style={{backgroundImage: 'radial-gradient(at 5% 10%, rgba(34,211,238,0.07) 0px, transparent 50%), radial-gradient(at 95% 90%, rgba(236,72,153,0.06) 0px, transparent 50%), radial-gradient(at 50% 50%, rgba(16,185,129,0.03) 0px, transparent 70%)'}}>
       {/* Header */}
-      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm transition-colors duration-200">
+      <header className="bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/60 px-6 py-4 flex items-center justify-between sticky top-0 z-10 shadow-[0_4px_30px_rgba(0,0,0,0.3)]">
         <div className="flex items-center gap-3">
-          <div className="bg-blue-600 p-2 rounded-lg shadow-sm">
-            <CheckSquare className="w-6 h-6 text-white" />
+          <div className="bg-gradient-to-br from-neon-cyan to-blue-500 p-2 rounded-xl shadow-[0_0_20px_rgba(34,211,238,0.3)]">
+            <CheckSquare className="w-6 h-6 text-slate-950" />
           </div>
           <div>
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white tracking-tight">Universal Task Structurer</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Transform any text or image into a structured Google Task</p>
+            <h1 className="text-xl font-black text-slate-100 tracking-tight">Universal Task Structurer</h1>
+            <p className="text-xs text-slate-500 font-medium">✨ Transform any text or image into a structured Google Task</p>
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {accessToken ? (
-            <button onClick={handleLogout} className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">
+            <button onClick={handleLogout} className="text-xs font-bold text-slate-400 hover:text-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-800 transition-all">
               Sign Out
             </button>
           ) : (
-            <button onClick={() => login()} className="text-sm bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-4 py-1.5 rounded-full font-medium hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors shadow-sm">
-              Connect Google Tasks
+            <button onClick={() => login()} className="text-xs font-black bg-neon-cyan/10 text-neon-cyan px-4 py-2 rounded-full border border-neon-cyan/30 hover:bg-neon-cyan hover:text-slate-950 transition-all duration-300 hover:shadow-[0_0_20px_rgba(34,211,238,0.35)] uppercase tracking-wider">
+              🔗 Connect Google Tasks
             </button>
           )}
           <button
             onClick={() => setIsDarkMode(!isDarkMode)}
-            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors"
+            className="p-2 rounded-xl hover:bg-slate-800 text-slate-500 hover:text-slate-300 transition-all border border-transparent hover:border-slate-700"
             title="Toggle theme"
           >
-            {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            {isDarkMode ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
           </button>
           {!isOnline && (
-            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-3 py-1.5 rounded-full text-sm font-medium border border-amber-200 dark:border-amber-800">
-              <WifiOff className="w-4 h-4" />
-              Offline Mode
+            <div className="flex items-center gap-2 text-neon-amber bg-neon-amber/10 px-3 py-1.5 rounded-full text-xs font-black border border-neon-amber/30 uppercase tracking-wider">
+              <WifiOff className="w-3.5 h-3.5" />
+              Offline
             </div>
           )}
         </div>
@@ -486,8 +486,8 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Paste unstructured notes, meeting transcripts, or drag images below..."
-              className="flex-1 w-full p-6 resize-none outline-none text-slate-200 bg-transparent font-mono text-sm placeholder-slate-600 scrollbar-thin"
+              placeholder="✏️  Paste your notes, meeting transcripts, to-do lists, or any unstructured text here...\n\nOr drop images & PDFs below for AI-powered OCR extraction 👇"
+              className="flex-1 w-full p-6 resize-none outline-none text-slate-200 bg-transparent font-mono text-sm placeholder-slate-400 scrollbar-thin leading-relaxed"
             />
             
             <div className="px-4 pb-2 bg-slate-950/30">
@@ -673,13 +673,36 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
                 </DragDropContext>
               </div>
             ) : (
-              <div className="flex-1 p-6 flex flex-col items-center justify-center text-gray-400 gap-3 bg-gray-50/50">
-                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-2 shadow-inner">
-                  <CheckSquare className="w-8 h-8 text-gray-300" />
+              <div className="flex-1 p-8 flex flex-col items-center justify-center text-center gap-6">
+                {/* Animated glow orb */}
+                <div className="relative">
+                  <div className="absolute inset-0 rounded-full bg-neon-cyan/10 blur-2xl animate-pulse" style={{width: '100px', height: '100px', transform: 'translate(-10%, -10%)'}} />
+                  <div className="relative w-20 h-20 rounded-3xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/60 flex items-center justify-center shadow-[0_0_30px_rgba(34,211,238,0.08)]">
+                    <span className="text-4xl">🧠</span>
+                  </div>
                 </div>
-                <p className="text-center max-w-sm">
-                  Your structured Google Task will appear here. Enter some text or upload an image, then click "Process Task" to begin.
-                </p>
+
+                <div className="space-y-2">
+                  <h3 className="text-lg font-black text-slate-200 tracking-tight">Intelligence Output</h3>
+                  <p className="text-sm text-slate-500 max-w-xs leading-relaxed">
+                    Paste your notes on the left and click <span className="text-neon-cyan font-bold">Process Intelligence</span> to extract structured tasks.
+                  </p>
+                </div>
+
+                {/* Step hints */}
+                <div className="flex flex-col gap-2.5 w-full max-w-xs">
+                  {[
+                    { emoji: '✏️', label: 'Paste notes or text' },
+                    { emoji: '🖼️', label: 'Or drop an image / PDF' },
+                    { emoji: '⚡', label: 'Click Process Intelligence' },
+                    { emoji: '📤', label: 'Send to Google Tasks' },
+                  ].map(({ emoji, label }, i) => (
+                    <div key={i} className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-slate-900/60 border border-slate-800/50 text-left">
+                      <span className="text-xl w-7 text-center">{emoji}</span>
+                      <span className="text-xs font-bold text-slate-400 tracking-wide">{label}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
