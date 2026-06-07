@@ -49,14 +49,50 @@ export function UrlInput({ onContentExtracted }: UrlInputProps) {
         }
       }
 
-      // ── Local / Vercel fallback using allorigins.win CORS proxy ──────
-      const res = await fetch(
-        `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`
-      );
-      if (!res.ok) throw new Error(`HTTP error ${res.status}: Failed to reach proxy server.`);
-      const data = await res.json();
-      if (!data.contents) throw new Error('Proxy server returned empty content.');
-      return data.contents;
+      // ── Local / Vercel fallback ──────────────────────────────────────
+      // Try CORS proxy 1: corsproxy.io (direct text)
+      try {
+        console.log('[UrlFetch] Trying corsproxy.io...');
+        const res = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(url)}`);
+        if (res.ok) {
+          const text = await res.text();
+          if (text && text.trim()) {
+            console.log('[UrlFetch] Successfully fetched via corsproxy.io');
+            return text;
+          }
+        }
+      } catch (err: any) {
+        console.warn('[UrlFetch] corsproxy.io failed:', err?.message);
+      }
+
+      // Try CORS proxy 2: allorigins.win (wrapped JSON)
+      try {
+        console.log('[UrlFetch] Trying allorigins.win...');
+        const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.contents) {
+            console.log('[UrlFetch] Successfully fetched via allorigins.win');
+            return data.contents;
+          }
+        }
+      } catch (err: any) {
+        console.warn('[UrlFetch] allorigins.win failed:', err?.message);
+      }
+
+      // Try direct fetch as last resort
+      try {
+        console.log('[UrlFetch] Trying direct fetch...');
+        const res = await fetch(url);
+        if (res.ok) {
+          const text = await res.text();
+          if (text) return text;
+        }
+      } catch (err: any) {
+        console.warn('[UrlFetch] Direct fetch failed:', err?.message);
+      }
+
+      throw new Error('Failed to fetch content from this URL. Both CORS proxies and direct fetch failed.');
     };
 
     try {
