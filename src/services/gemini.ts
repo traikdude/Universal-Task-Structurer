@@ -51,10 +51,6 @@ export async function processTaskStream(
   imageMimeType: string | undefined,
   onChunk: (text: string) => void
 ): Promise<string> {
-
-  const apiKey = getApiKey();
-  const ai = new GoogleGenAI({ apiKey });
-
   // ── Inject today's date ──────────────────────────────────────────────────
   const currentDate = new Date().toLocaleDateString('en-US', {
     weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
@@ -74,6 +70,30 @@ export async function processTaskStream(
       input || 'Extract tasks from the provided image.'
     }`
   });
+
+  // ── Check if we are running in the Google Apps Script context ────────────
+  if (typeof window !== 'undefined' && (window as any).google?.script?.run) {
+    const contents = [{ role: 'user', parts }];
+    return new Promise<string>((resolve, reject) => {
+      (window as any).google.script.run
+        .withSuccessHandler((response: { text?: string; error?: string }) => {
+          if (response && response.error) {
+            reject(new GeminiApiError(response.error));
+          } else {
+            const text = response?.text || '';
+            onChunk(text);
+            resolve(text);
+          }
+        })
+        .withFailureHandler((err: any) => {
+          reject(new GeminiApiError(err?.message || 'Failed to query Gemini via GAS server proxy.'));
+        })
+        .queryGemini('gemini-2.5-flash', contents, systemInstruction);
+    });
+  }
+
+  const apiKey = getApiKey();
+  const ai = new GoogleGenAI({ apiKey });
 
   // ── Attempt each model in the fallback chain ─────────────────────────────
   let lastError: GeminiApiError | null = null;

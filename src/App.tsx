@@ -44,15 +44,28 @@ export default function App() {
   const [sendListName, setSendListName] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [accessToken, setAccessToken] = useState<string | null>(localStorage.getItem('google_access_token'));
-
+  const [accessToken, setAccessToken] = useState<string | null>(() => {
+    if (typeof window !== 'undefined' && (window as any).google?.script?.run) {
+      return 'gas-native';
+    }
+    try {
+      return localStorage.getItem('google_access_token');
+    } catch (e) {
+      console.warn('[Storage] Failed to read from localStorage:', e);
+      return null;
+    }
+  });
   const [history, setHistory] = useState<HistoryEntry[]>([]);
 
   const login = useGoogleLogin({
     scope: 'https://www.googleapis.com/auth/tasks',
     onSuccess: (tokenResponse) => {
         setAccessToken(tokenResponse.access_token);
-        localStorage.setItem('google_access_token', tokenResponse.access_token);
+        try {
+          localStorage.setItem('google_access_token', tokenResponse.access_token);
+        } catch (e) {
+          console.warn('[Storage] Failed to write to localStorage:', e);
+        }
     },
     onError: (error) => console.log('Login Failed:', error)
   });
@@ -60,10 +73,13 @@ export default function App() {
   const handleLogout = () => {
     googleLogout();
     setAccessToken(null);
-    localStorage.removeItem('google_access_token');
+    try {
+      localStorage.removeItem('google_access_token');
+    } catch (e) {
+      console.warn('[Storage] Failed to clear localStorage:', e);
+    }
   };
 
-  // Draft auto-save
   const draftRef = useRef('');
   useEffect(() => {
     draftRef.current = input;
@@ -80,7 +96,6 @@ export default function App() {
     };
   }, []);
 
-  // Theme toggle effect
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
@@ -465,9 +480,15 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
             </div>
           )}
           {accessToken ? (
-            <button onClick={handleLogout} className="joy-btn-ghost text-xs px-2 py-1.5">
-              <span className="hidden sm:inline">👋 </span>Sign Out
-            </button>
+            accessToken === 'gas-native' ? (
+              <div className="flex items-center gap-1 text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-xl text-xs font-semibold border border-emerald-200">
+                <span>🟢 Connected (GAS)</span>
+              </div>
+            ) : (
+              <button onClick={handleLogout} className="joy-btn-ghost text-xs px-2 py-1.5">
+                <span className="hidden sm:inline">👋 </span>Sign Out
+              </button>
+            )
           ) : (
             <button
               onClick={() => login()}
