@@ -783,9 +783,13 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
               </div>
             ) : (
               <div className="flex-1 p-8 flex flex-col items-center justify-center text-center gap-5 bg-white dark:bg-slate-900/20">
-                {/* 🌟 Hero Icon */}
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-900 dark:to-slate-950 border-2 border-blue-100 dark:border-slate-800 rounded-3xl flex items-center justify-center shadow-sm animate-bounce-in">
-                  <span className="text-4xl animate-pulse-slow">🧠</span>
+                {/* 🌟 Sketchnote Empty State Mascot */}
+                <div className="w-48 h-48 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm animate-bounce-in bg-white dark:bg-slate-900 flex items-center justify-center">
+                  <img 
+                    src="https://raw.githubusercontent.com/traikdude/Universal-Task-Structurer/main/public/empty_state.png" 
+                    alt="Ready to Structure Mascot" 
+                    className="w-full h-full object-cover" 
+                  />
                 </div>
 
                 <div className="space-y-1.5">
