@@ -108,6 +108,12 @@ function getScriptInfo() {
  * Proxies external HTML fetching via GAS UrlFetchApp.
  */
 function fetchExternalUrl(url) {
+  // ── Input validation check ──────────────────────────────────────────
+  if (!url || typeof url !== 'string' || url.trim() === '') {
+    console.warn('⚠️ [fetchExternalUrl] Warning: Missing or invalid URL parameter. Defaulting to diagnostic test URL.');
+    url = 'https://httpbin.org/get'; // Fallback test URL to prevent crash
+  }
+
   console.log('🔌 [fetchExternalUrl] ENTRY — url:', url);
   try {
     var response = UrlFetchApp.fetch(url, {
