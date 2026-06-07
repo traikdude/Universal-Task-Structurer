@@ -105,3 +105,77 @@ The deployed Google Apps Script Web App failed to initialize native authenticati
 4. Recompiled the Vite app, ran post-processing, and redeployed the webapp under the active deployment ID (`AKfycbz3e4vpec...`) to Version 47. 🚀🌍
 Resolution Status: ✅ Fully Resolved
 
+---
+
+📁 File Name / Reference: [Tailwind CSS v4 Dark Mode Class Configuration](file:///c:/Users/traik/.gemini/antigravity-ide/Github%20Repo/Universal-Task-Structurer/src/index.css)
+File Type: Log / Style Code
+Record ID: TDB-006
+Date Processed: 2026-06-07
+Category / Tags: Software, UI/UX, CSS
+
+🛑 Issue Identified
+Class-based dark mode theme toggling was non-functional under Tailwind CSS v4. 🛑👀
+- Under Tailwind v4, selector-based dark mode is not enabled by default and requires explicit variant declarations. 🌓🚫
+- Toggling the `.dark` class on the `<html>` or `<body>` element failed to activate the `dark:` utility styles. ❌🎨
+
+✅ Resolution Applied
+1. Added the custom variant definition `@custom-variant dark (&:where(.dark, .dark *));` to [src/index.css](file:///c:/Users/traik/.gemini/antigravity-ide/Github%20Repo/Universal-Task-Structurer/src/index.css) directly below the `@import "tailwindcss";` directive. 🛠️✨
+2. Rebuilt and verified that dark/light class switches apply the correct style attributes dynamically. 🌗🏆
+Resolution Status: ✅ Fully Resolved
+
+---
+
+📁 File Name / Reference: [Layout & Text Contrast Overhaul](file:///c:/Users/traik/.gemini/antigravity-ide/Github%20Repo/Universal-Task-Structurer/src/components/TaskCard.tsx)
+File Type: Log / UI Code
+Record ID: TDB-007
+Date Processed: 2026-06-07
+Category / Tags: UI/UX, Software, React
+
+🛑 Issue Identified
+The web application layout was overly constrained and had poor color contrast. 🛑👀
+- The main page width was limited to `max-w-6xl`, causing grid layout crowding on wider screens. 📐📉
+- TaskCard titles and input text utilized hardcoded light-colored text elements (`text-slate-100`), making the labels invisible in light mode against white backgrounds. ⚪🚫
+
+✅ Resolution Applied
+1. Modified [src/App.tsx](file:///c:/Users/traik/.gemini/antigravity-ide/Github%20Repo/Universal-Task-Structurer/src/App.tsx) to expand the main container grid width to `max-w-[1400px]` for widescreen layout support. 🛠️📐
+2. Refactored [src/components/TaskCard.tsx](file:///c:/Users/traik/.gemini/antigravity-ide/Github%20Repo/Universal-Task-Structurer/src/components/TaskCard.tsx) to replace static colors with responsive classes (`text-slate-900 dark:text-slate-100`) for text, editing inputs, and borders. 🎨✨
+3. Restructured card container styling to use semi-transparent backgrounds (`bg-slate-100/60 dark:bg-slate-950/50`) to optimize readability across light and dark modes. 🌗🏆
+Resolution Status: ✅ Fully Resolved
+
+---
+
+📁 File Name / Reference: [Unicode Mojibake Base64 Decoding Bug](file:///c:/Users/traik/.gemini/antigravity-ide/Github%20Repo/Universal-Task-Structurer/build-gas.js)
+File Type: Log / Script Code
+Record ID: TDB-008
+Date Processed: 2026-06-07
+Category / Tags: Software, Apps Script, Javascript
+
+🛑 Issue Identified
+The live Google Apps Script web app displayed corrupted text (mojibake) such as `â ` and `â ¶` instead of emojis and specific layout elements. 🛑👀
+- The build script [build-gas.js](file:///c:/Users/traik/.gemini/antigravity-ide/Github%20Repo/Universal-Task-Structurer/build-gas.js) encodes the compiled JS bundle as a base64 string to bypass Google's HTML sanitizer. 📦🚫
+- At runtime, decoding the bundle via `atob(b64)` returned a binary string (Latin-1), splitting multi-byte UTF-8 emoji characters into corrupted individual bytes. ❌🔠
+
+✅ Resolution Applied
+1. Replaced the runtime decoding logic in [build-gas.js](file:///c:/Users/traik/.gemini/antigravity-ide/Github%20Repo/Universal-Task-Structurer/build-gas.js) with the UTF-8-safe utility: `decodeURIComponent(escape(atob(b64)))`. 🛠️✨
+2. Recompiled the project and verified that emojis and layout symbols render with correct encoding in the browser. 🏆🎉
+Resolution Status: ✅ Fully Resolved
+
+---
+
+📁 File Name / Reference: [Web App Redeployment Version Locking](file:///c:/Users/traik/.gemini/antigravity-ide/Github%20Repo/Universal-Task-Structurer/.clasp.json)
+File Type: Log / DevOps
+Record ID: TDB-009
+Date Processed: 2026-06-07
+Category / Tags: Software, Apps Script, DevOps
+
+🛑 Issue Identified
+Recent styling and encoding changes pushed via `clasp push` failed to show up on the live Apps Script Web App URL. 🛑👀
+- Running `clasp push` only updates the file draft version in the Apps Script project editor. 🔌⚙️
+- The active public `/exec` Web App URL remains locked to a frozen version number (version 59), serving outdated code. 🔒🚫
+
+✅ Resolution Applied
+1. Executed a targeted redeployment command using the existing web app deployment ID to update the code version without changing the URL: `npx clasp deploy -i AKfycbzRCkuQUWi9FZ7UK2WSNk7nf0w0mEmPrNs9ArKYpIyDHfhMIubG1Zo5rl3ZDuCT00tN -d "v60 - Premium dark/light themes and mojibake base64 decoding fix"`. 🛠️🚀
+2. Verified that the command successfully updated the web app to version 60 under the same URL. 🏆🎉
+Resolution Status: ✅ Fully Resolved
+
+
