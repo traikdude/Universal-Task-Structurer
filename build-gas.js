@@ -44,20 +44,29 @@ const base64Code = Buffer.from(jsContent, 'utf8').toString('base64');
 const bootstrapScript = `<script id="app-bundle" type="text/plain">${base64Code}</script>
 <script>
   (function() {
-    try {
-      var b64 = document.getElementById('app-bundle').textContent.trim();
-      var bin = atob(b64);
-      var bytes = new Uint8Array(bin.length);
-      for (var i = 0; i < bin.length; i++) {
-        bytes[i] = bin.charCodeAt(i);
+    function boot() {
+      try {
+        var b64 = document.getElementById('app-bundle').textContent.trim();
+        var bin = atob(b64);
+        var bytes = new Uint8Array(bin.length);
+        for (var i = 0; i < bin.length; i++) {
+          bytes[i] = bin.charCodeAt(i);
+        }
+        var decoded = new TextDecoder('utf-8').decode(bytes);
+        var script = document.createElement('script');
+        script.type = 'module';
+        script.textContent = decoded;
+        (document.head || document.documentElement).appendChild(script);
+        console.log('[Bootstrap] Application bundle successfully loaded and executed. 🎉');
+      } catch (e) {
+        console.error('[Bootstrap] Failed to initialize application bundle:', e);
       }
-      var decoded = new TextDecoder('utf-8').decode(bytes);
-      var script = document.createElement('script');
-      script.textContent = decoded;
-      (document.head || document.documentElement).appendChild(script);
-      console.log('[Bootstrap] Application bundle successfully loaded and executed. 🎉');
-    } catch (e) {
-      console.error('[Bootstrap] Failed to initialize application bundle:', e);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', boot);
+    } else {
+      boot();
     }
   })();
 </script>`;

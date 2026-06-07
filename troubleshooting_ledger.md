@@ -62,3 +62,24 @@ Executing task extraction requests on the local site resulted in `403 PERMISSION
 3. Confirmed that the dev server restarted and loaded the new key automatically. 🔌⚙️
 4. Ran a task extraction query in Chrome DevTools to confirm successful streaming and UI card rendering. 🎉🥳
 Resolution Status: ✅ Fully Resolved
+
+---
+
+📁 File Name / Reference: [ES Module Script Injection Syntax Error](file:///c:/Users/traik/.gemini/antigravity-ide/Github%20Repo/Universal-Task-Structurer/build-gas.js)
+File Type: Log / Script Code
+Record ID: TDB-004
+Date Processed: 2026-06-07
+Category / Tags: Software, Browser Sandbox, Apps Script, Javascript
+
+🛑 Issue Identified
+The deployed Google Apps Script Web App rendered as a completely blank white screen. 🛑👀
+- The bootstrap script was creating a standard classic `<script>` element and injecting the compiled JS bundle. 📦🔌
+- The Vite compiled output utilized ES Module syntax (e.g. `import.meta.url`). ⚙️🚫
+- Modern browsers enforce that `import.meta` can only be used inside module scripts. Appending this code to a classic script threw an unhandled SyntaxError at parsing time, crashing the React app initialization. ❌💻
+
+✅ Resolution Applied
+1. Modified the bootstrap script in [build-gas.js](file:///c:/Users/traik/.gemini/antigravity-ide/Github%20Repo/Universal-Task-Structurer/build-gas.js) to explicitly set the script tag's type to `'module'` (`script.type = 'module'`). 🛠️✨
+2. Rebuilt the application (`npm run build`) and processed it (`node build-gas.js`). 🏗️✅
+3. Pushed the updated code to Google Apps Script (`npx clasp push --force`) and redeployed. 🚀🌍
+4. Verified that the app loads and mounts React successfully in the Google Apps Script Web App iframe without errors. 🏆🎉
+Resolution Status: ✅ Fully Resolved
