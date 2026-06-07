@@ -83,3 +83,25 @@ The deployed Google Apps Script Web App rendered as a completely blank white scr
 3. Pushed the updated code to Google Apps Script (`npx clasp push --force`) and redeployed. 🚀🌍
 4. Verified that the app loads and mounts React successfully in the Google Apps Script Web App iframe without errors. 🏆🎉
 Resolution Status: ✅ Fully Resolved
+
+---
+
+📁 File Name / Reference: [Google Apps Script Environment Detection Race Condition](file:///c:/Users/traik/.gemini/antigravity-ide/Github%20Repo/Universal-Task-Structurer/src/App.tsx)
+File Type: Log / Code
+Record ID: TDB-005
+Date Processed: 2026-06-07
+Category / Tags: Software, Authentication, Apps Script, React
+
+🛑 Issue Identified
+The deployed Google Apps Script Web App failed to initialize native authentication on launch, displaying the "Connect Tasks" button instead of the "Connected (GAS)" status badge. 🛑👀
+- Google's iframe container loads the `google.script.run` API object asynchronously. ⏳🛡️
+- The React application initialized `accessToken` synchronously during the first render loop. Since the API object was not yet defined at that exact millisecond, the app incorrectly fell back to client-side OAuth. ❌🔑
+- Standard client-side OAuth prompts failed to execute inside the double-sandboxed iframe due to browser cross-origin local storage and popup security blocks. 🔒🚫
+
+✅ Resolution Applied
+1. Modified [src/App.tsx](file:///c:/Users/traik/.gemini/antigravity-ide/Github%20Repo/Universal-Task-Structurer/src/App.tsx) to replace synchronous initialization of `accessToken` with a polling mechanism inside `useEffect` on mount. 🛠️✨
+2. Configured the hook to check for `(window as any).google?.script?.run` at 100ms intervals. 🔌⏳
+3. Set a 2-second timeout to fall back to local storage OAuth tokens if the native Apps Script context is not detected (for local dev server compatibility). 📁🔑
+4. Recompiled the Vite app, ran post-processing, and redeployed the webapp under the active deployment ID (`AKfycbz3e4vpec...`) to Version 47. 🚀🌍
+Resolution Status: ✅ Fully Resolved
+

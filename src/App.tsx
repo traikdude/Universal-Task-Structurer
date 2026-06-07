@@ -44,17 +44,44 @@ export default function App() {
   const [sendListName, setSendListName] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [accessToken, setAccessToken] = useState<string | null>(() => {
-    if (typeof window !== 'undefined' && (window as any).google?.script?.run) {
-      return 'gas-native';
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    const detectGas = () => {
+      if (typeof window !== 'undefined' && (window as any).google?.script?.run) {
+        setAccessToken('gas-native');
+        console.log('[GAS Auth] Native Apps Script environment detected! 🟢');
+        return true;
+      }
+      return false;
+    };
+
+    if (!detectGas()) {
+      const interval = setInterval(() => {
+        if (detectGas()) {
+          clearInterval(interval);
+        }
+      }, 100);
+
+      const timeout = setTimeout(() => {
+        clearInterval(interval);
+        try {
+          const localToken = localStorage.getItem('google_access_token');
+          if (localToken) {
+            setAccessToken(localToken);
+            console.log('[Local Auth] Restored OAuth access token from localStorage. 🔑');
+          }
+        } catch (e) {
+          console.warn('[Storage] Failed to read from localStorage:', e);
+        }
+      }, 2000);
+
+      return () => {
+        clearInterval(interval);
+        clearTimeout(timeout);
+      };
     }
-    try {
-      return localStorage.getItem('google_access_token');
-    } catch (e) {
-      console.warn('[Storage] Failed to read from localStorage:', e);
-      return null;
-    }
-  });
+  }, []);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
 
   const login = useGoogleLogin({
