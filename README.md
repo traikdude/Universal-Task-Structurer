@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/assets/banner.png" alt="Universal Task Structurer Banner" width="100%">
+<img src="docs/assets/banner_sketchnote.png" alt="Universal Task Structurer Banner" width="100%">
 
 # **✅ Universal Task Structurer**
 
