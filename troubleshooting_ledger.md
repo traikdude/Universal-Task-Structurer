@@ -219,7 +219,23 @@ Extracting tasks from dynamic dashboards or Single Page Applications (SPAs) like
 4. Verified that dynamic pages now successfully extract title metadata and schema content for task generation instead of crashing with a "No readable content found" error. 🏆🎉
 Resolution Status: ✅ Fully Resolved
 
+---
 
+📁 File Name / Reference: [Local Dev Environment CORS Proxy Flakiness](file:///c:/Users/traik/.gemini/antigravity-ide/Github%20Repo/Universal-Task-Structurer/src/components/UrlInput.tsx)
+File Type: Log / Code / Network
+Record ID: TDB-012
+Date Processed: 2026-06-07
+Category / Tags: Software, UI/UX, Network, CORS Proxy
 
+🛑 Issue Identified
+Testing URL extraction locally on `localhost:3002` failed with a CORS policy error because `api.allorigins.win` returned headers without the required CORS access approvals or was rate-limited during the fetch request. 🛑👀
+- The client app was restricted to a single proxy `api.allorigins.win`. 🔌🚫
+- When this proxy failed or had CORS header issues, the entire URL extraction feature on local development collapsed with a "Failed to fetch" red message. ❌💻
 
-
+✅ Resolution Applied
+1. Refactored `getHtmlContent` in [src/components/UrlInput.tsx](file:///c:/Users/traik/.gemini/antigravity-ide/Github%20Repo/Universal-Task-Structurer/src/components/UrlInput.tsx) to implement a multi-tiered fallback architecture. 🛠️✨
+2. Configured the loader to try `corsproxy.io` first (which returns raw text and does not wrap inside JSON). 🔌🏆
+3. Configured an automatic fallback to `api.allorigins.win` if the first proxy fails or throws an exception. 🔄🛡️
+4. Added direct `fetch(url)` as a last-resort fallback for local setups that support un-proxied requests. ⚙️💻
+5. Verified the solution by launching Chrome DevTools, feeding Chromebook and Blaze URLs, and confirming successful text insertions in the local React app. 🏆🎉
+Resolution Status: ✅ Fully Resolved
