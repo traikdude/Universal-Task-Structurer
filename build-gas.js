@@ -60,7 +60,7 @@ console.log(`[GAS Builder] Base64-encoded JS bundle: ${b64.length} chars (origin
 
 const inlineScript = `<script>
 try {
-  var __code = atob("${b64}");
+  var __code = decodeURIComponent(escape(atob("${b64}")));
   (new Function(__code))();
 } catch(e) {
   var r = document.getElementById('root');
