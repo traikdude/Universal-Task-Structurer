@@ -178,4 +178,26 @@ Recent styling and encoding changes pushed via `clasp push` failed to show up on
 2. Verified that the command successfully updated the web app to version 60 under the same URL. 🏆🎉
 Resolution Status: ✅ Fully Resolved
 
+---
+
+📁 File Name / Reference: [CORS Fetch Block on URL Extraction](file:///c:/Users/traik/.gemini/antigravity-ide/Github%20Repo/Universal-Task-Structurer/src/components/UrlInput.tsx)
+File Type: Log / UI Code
+Record ID: TDB-010
+Date Processed: 2026-06-07
+Category / Tags: Software, UI/UX, Network, Apps Script
+
+🛑 Issue Identified
+Extracting text content from external URLs returned a "failed to fetch" red error message on the client screen. 🛑👀
+- The frontend `UrlInput.tsx` component utilized a public CORS proxy (`api.allorigins.win`) directly. 🔌🚫
+- Some external domains (like `dashboard.blaze.today`) reject public CORS proxies or experience transient request blocks. ❌🌐
+- Running inside the sandboxed iframe of Google Apps Script restricts browser-level network fetches. 🔒💻
+
+✅ Resolution Applied
+1. Updated [src/components/UrlInput.tsx](file:///c:/Users/traik/.gemini/antigravity-ide/Github%20Repo/Universal-Task-Structurer/src/components/UrlInput.tsx) to check for the active Google Apps Script environment via `(window as any).google?.script?.run`. 🛠️✨
+2. Integrated the server-side proxy handler `fetchExternalUrl(url)` which runs securely under Google's high-reputation server IP blocks using `UrlFetchApp.fetch()`. 🔌🛡️
+3. Retained the public CORS proxy `allorigins.win` as a clean fallback for local development or Vercel execution. ⚙️🔄
+4. Built the assets, processed the single base64 bundle, pushed using clasp, and redeployed version 62 to the active deployment ID. 🏆🚀
+Resolution Status: ✅ Fully Resolved
+
+
 
