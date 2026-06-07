@@ -1,8 +1,8 @@
 <div align="center">
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+<img src="docs/assets/banner.png" alt="Universal Task Structurer Banner" width="100%">
 
-# **Universal Task Structurer**
+# **✅ Universal Task Structurer**
 
 **Turn messy notes, images, or URLs into perfectly structured Google Tasks using Gemini AI.**
 
