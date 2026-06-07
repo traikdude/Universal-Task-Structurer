@@ -23,13 +23,46 @@ export function UrlInput({ onContentExtracted }: UrlInputProps) {
     }
     setStatus('loading');
     setErrorMsg('');
-    try {
+
+    const getHtmlContent = async (): Promise<string> => {
+      // ── Google Apps Script native environment check ──────────────────
+      if (typeof window !== 'undefined' && (window as any).google?.script?.run) {
+        try {
+          return await new Promise<string>((resolve, reject) => {
+            (window as any).google.script.run
+              .withSuccessHandler((response: { contents?: string; error?: string }) => {
+                if (response && response.error) {
+                  reject(new Error(response.error));
+                } else if (response && response.contents) {
+                  resolve(response.contents);
+                } else {
+                  reject(new Error('No response contents returned from Google Apps Script proxy.'));
+                }
+              })
+              .withFailureHandler((err: any) => {
+                reject(new Error(err?.message || 'Google Apps Script proxy execution failed.'));
+              })
+              .fetchExternalUrl(url);
+          });
+        } catch (gasErr: any) {
+          console.warn('[UrlFetch] Apps Script proxy call failed, falling back to CORS proxy:', gasErr?.message);
+        }
+      }
+
+      // ── Local / Vercel fallback using allorigins.win CORS proxy ──────
       const res = await fetch(
         `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`
       );
+      if (!res.ok) throw new Error(`HTTP error ${res.status}: Failed to reach proxy server.`);
       const data = await res.json();
+      if (!data.contents) throw new Error('Proxy server returned empty content.');
+      return data.contents;
+    };
+
+    try {
+      const htmlContent = await getHtmlContent();
       const parser = new DOMParser();
-      const doc = parser.parseFromString(data.contents, 'text/html');
+      const doc = parser.parseFromString(htmlContent, 'text/html');
       // Strip scripts/styles for cleaner text
       doc.querySelectorAll('script, style, nav, footer, aside').forEach(el => el.remove());
       const text = doc.body?.innerText?.trim() || '';
