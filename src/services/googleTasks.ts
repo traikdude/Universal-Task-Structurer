@@ -58,20 +58,24 @@ async function assertOk(res: Response, context: string): Promise<void> {
  */
 export const fetchTaskLists = async (accessToken: string): Promise<TaskList[]> => {
   if (accessToken === 'gas-native' && typeof window !== 'undefined' && (window as any).google?.script?.run) {
-    return new Promise<TaskList[]>((resolve, reject) => {
-      (window as any).google.script.run
-        .withSuccessHandler((response: { items?: TaskList[]; error?: string }) => {
-          if (response && response.error) {
-            reject(new Error(response.error));
-          } else {
-            resolve(response?.items ?? []);
-          }
-        })
-        .withFailureHandler((err: any) => {
-          reject(new Error(err?.message || 'Failed to fetch task lists via GAS proxy.'));
-        })
-        .gasFetchTaskLists();
-    });
+    try {
+      return await new Promise<TaskList[]>((resolve, reject) => {
+        (window as any).google.script.run
+          .withSuccessHandler((response: { items?: TaskList[]; error?: string }) => {
+            if (response && response.error) {
+              reject(new Error(response.error));
+            } else {
+              resolve(response?.items ?? []);
+            }
+          })
+          .withFailureHandler((err: any) => {
+            reject(new Error(err?.message || 'GAS proxy failed.'));
+          })
+          .gasFetchTaskLists();
+      });
+    } catch (gasErr: any) {
+      console.warn('[Google Tasks] GAS proxy failed, falling back to REST API:', gasErr?.message);
+    }
   }
 
   const res = await fetch(`${BASE_URL}/users/@me/lists`, {
@@ -87,20 +91,24 @@ export const fetchTaskLists = async (accessToken: string): Promise<TaskList[]> =
  */
 export const createTaskList = async (accessToken: string, title: string): Promise<TaskList> => {
   if (accessToken === 'gas-native' && typeof window !== 'undefined' && (window as any).google?.script?.run) {
-    return new Promise<TaskList>((resolve, reject) => {
-      (window as any).google.script.run
-        .withSuccessHandler((response: any) => {
-          if (response && response.error) {
-            reject(new Error(response.error));
-          } else {
-            resolve(response);
-          }
-        })
-        .withFailureHandler((err: any) => {
-          reject(new Error(err?.message || 'Failed to create task list via GAS proxy.'));
-        })
-        .gasCreateTaskList(title);
-    });
+    try {
+      return await new Promise<TaskList>((resolve, reject) => {
+        (window as any).google.script.run
+          .withSuccessHandler((response: any) => {
+            if (response && response.error) {
+              reject(new Error(response.error));
+            } else {
+              resolve(response);
+            }
+          })
+          .withFailureHandler((err: any) => {
+            reject(new Error(err?.message || 'GAS proxy failed.'));
+          })
+          .gasCreateTaskList(title);
+      });
+    } catch (gasErr: any) {
+      console.warn('[Google Tasks] GAS createTaskList proxy failed, falling back:', gasErr?.message);
+    }
   }
 
   const res = await fetch(`${BASE_URL}/users/@me/lists`, {
@@ -149,20 +157,24 @@ export const insertTask = async (
   };
 
   if (accessToken === 'gas-native' && typeof window !== 'undefined' && (window as any).google?.script?.run) {
-    return new Promise<any>((resolve, reject) => {
-      (window as any).google.script.run
-        .withSuccessHandler((response: any) => {
-          if (response && response.error) {
-            reject(new Error(response.error));
-          } else {
-            resolve(response);
-          }
-        })
-        .withFailureHandler((err: any) => {
-          reject(new Error(err?.message || 'Failed to insert task via GAS proxy.'));
-        })
-        .gasInsertTask(listId, payload);
-    });
+    try {
+      return await new Promise<any>((resolve, reject) => {
+        (window as any).google.script.run
+          .withSuccessHandler((response: any) => {
+            if (response && response.error) {
+              reject(new Error(response.error));
+            } else {
+              resolve(response);
+            }
+          })
+          .withFailureHandler((err: any) => {
+            reject(new Error(err?.message || 'GAS proxy failed.'));
+          })
+          .gasInsertTask(listId, payload);
+      });
+    } catch (gasErr: any) {
+      console.warn('[Google Tasks] GAS insertTask proxy failed, falling back:', gasErr?.message);
+    }
   }
 
   const res = await fetch(`${BASE_URL}/lists/${listId}/tasks`, {

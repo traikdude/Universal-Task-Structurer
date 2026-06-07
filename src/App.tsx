@@ -63,6 +63,8 @@ export default function App() {
         }
       }, 100);
 
+      // GAS HTML Service can take 3-5s to mount google.script.run in some browsers.
+      // Increased from 2000ms to 5000ms to avoid premature fallback.
       const timeout = setTimeout(() => {
         clearInterval(interval);
         try {
@@ -74,7 +76,7 @@ export default function App() {
         } catch (e) {
           console.warn('[Storage] Failed to read from localStorage:', e);
         }
-      }, 2000);
+      }, 5000);
 
       return () => {
         clearInterval(interval);

@@ -72,24 +72,45 @@ export async function processTaskStream(
   });
 
   // ── Check if we are running in the Google Apps Script context ────────────
+  // GAS HTML Service does not support Server-Sent Events or streaming.
+  // The server-side queryGemini() returns the complete response in one shot.
+  // IMPORTANT: In GAS, the Gemini API must go through the server-side proxy
+  // because the GAS iframe sandbox blocks direct browser-to-API calls (CORS).
   if (typeof window !== 'undefined' && (window as any).google?.script?.run) {
     const contents = [{ role: 'user', parts }];
-    return new Promise<string>((resolve, reject) => {
-      (window as any).google.script.run
-        .withSuccessHandler((response: { text?: string; error?: string }) => {
-          if (response && response.error) {
-            reject(new GeminiApiError(response.error));
-          } else {
-            const text = response?.text || '';
-            onChunk(text);
-            resolve(text);
-          }
-        })
-        .withFailureHandler((err: any) => {
-          reject(new GeminiApiError(err?.message || 'Failed to query Gemini via GAS server proxy.'));
-        })
-        .queryGemini('gemini-2.5-flash', contents, systemInstruction);
-    });
+    try {
+      const gasResult = await new Promise<string>((resolve, reject) => {
+        (window as any).google.script.run
+          .withSuccessHandler((response: { text?: string; error?: string }) => {
+            if (response && response.error) {
+              reject(new GeminiApiError(response.error));
+            } else {
+              const text = response?.text || '';
+              onChunk(text);
+              resolve(text);
+            }
+          })
+          .withFailureHandler((err: any) => {
+            reject(new GeminiApiError(err?.message || 'GAS server proxy failed.'));
+          })
+          .queryGemini(MODEL_CHAIN[0], contents, systemInstruction);
+      });
+      return gasResult;
+    } catch (gasError: any) {
+      const msg = gasError?.message || '';
+      // If the error is a permission/auth issue, give clear instructions
+      if (msg.includes('permission') || msg.includes('UrlFetchApp') || msg.includes('authorization')) {
+        throw new GeminiApiError(
+          'Server authorization required. Please open the Apps Script Editor, select "forceAuth" from the function dropdown, click Run, and accept the OAuth consent dialog. Then reload this page.',
+          { status: 403 }
+        );
+      }
+      // For other GAS errors, rethrow with context
+      throw new GeminiApiError(
+        `GAS server proxy error: ${msg}. If this persists, check the Apps Script logs.`,
+        { status: 500 }
+      );
+    }
   }
 
   const apiKey = getApiKey();

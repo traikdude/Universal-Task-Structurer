@@ -23,5 +23,26 @@ export default defineConfig(({mode}) => {
       // Do not modify — file watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',
     },
+
+    // ── GAS Production Build Configuration ──────────────────────────
+    // Google Apps Script HTML Service runs inside a sandboxed iframe that
+    // BLOCKS: type="module" scripts, eval(), Function(), dynamic import()
+    // ALLOWS: inline <script> tags, inline <style> tags
+    //
+    // These settings produce a single IIFE JS bundle + single CSS file
+    // that the build-gas.js post-processor inlines into index.html.
+    build: {
+      target: 'es2020', // GAS V8 runtime supports ES2020
+      cssCodeSplit: false, // Single CSS file (no per-chunk CSS)
+      assetsInlineLimit: 100000000, // Inline all assets as base64 data URIs
+      rollupOptions: {
+        output: {
+          format: 'iife', // CRITICAL: Self-executing function, NOT ESM
+          inlineDynamicImports: true, // No code splitting — single bundle
+          entryFileNames: 'assets/app.js', // Predictable filename (no hash)
+          assetFileNames: 'assets/[name].[ext]', // Predictable asset names
+        },
+      },
+    },
   };
 });
