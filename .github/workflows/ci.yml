@@ -19,16 +19,20 @@ jobs:
       with:
         node-version: '20'
         cache: 'npm'
-        cache-dependency-path: 'Universal-Task-Structurer/package-lock.json'
+        cache-dependency-path: 'package-lock.json'
 
     - name: 📦 Install dependencies
-      working-directory: ./Universal-Task-Structurer
       run: npm install
 
-    - name: 🔍 Type-Check (Lint)
-      working-directory: ./Universal-Task-Structurer
+    - name: 🔍 Type-Check (TS Lint)
       run: npm run lint
 
+    - name: 🔍 ESLint Code Quality
+      run: |
+        npm install -g eslint
+        eslint src/**/*.ts src/**/*.tsx src/gas/**/*.js || true
+
     - name: 🏗️ Verify Production Build
-      working-directory: ./Universal-Task-Structurer
-      run: npm run build
+      run: |
+        npm run build
+        node build-gas.js
