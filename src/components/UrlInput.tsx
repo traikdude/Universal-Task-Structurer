@@ -63,11 +63,51 @@ export function UrlInput({ onContentExtracted }: UrlInputProps) {
       const htmlContent = await getHtmlContent();
       const parser = new DOMParser();
       const doc = parser.parseFromString(htmlContent, 'text/html');
-      // Strip scripts/styles for cleaner text
+
+      // ── Extract Metadata and Structured Data ──────────────────────────
+      const title = doc.querySelector('title')?.innerText || 
+                    doc.querySelector('meta[property="og:title"]')?.getAttribute('content') || '';
+      const description = doc.querySelector('meta[name="description"]')?.getAttribute('content') || 
+                          doc.querySelector('meta[property="og:description"]')?.getAttribute('content') || '';
+      
+      let jsonLdContent = '';
+      doc.querySelectorAll('script[type="application/ld+json"]').forEach(script => {
+        try {
+          const rawText = script.textContent?.trim();
+          if (rawText) {
+            const json = JSON.parse(rawText);
+            const textContent = json.articleBody || json.description || json.text || json.name || '';
+            if (textContent) {
+              jsonLdContent += `\n[Structured Data]: ${textContent}\n`;
+            }
+          }
+        } catch {
+          // Ignore malformed JSON-LD tags
+        }
+      });
+
+      // Strip script/style layouts for normal body crawl
       doc.querySelectorAll('script, style, nav, footer, aside').forEach(el => el.remove());
-      const text = doc.body?.innerText?.trim() || '';
-      if (!text) throw new Error('No readable content found on this page.');
-      onContentExtracted(`\n--- 🔗 Content from ${url} ---\n${text.slice(0, 8000)}\n`);
+      const bodyText = doc.body?.innerText?.trim() || '';
+
+      // Compose combined text
+      let combined = '';
+      if (title) combined += `Title: ${title}\n`;
+      if (description) combined += `Description: ${description}\n`;
+      if (jsonLdContent) combined += `${jsonLdContent}\n`;
+      if (bodyText) combined += `\nBody Content:\n${bodyText}`;
+
+      const finalText = combined.trim();
+      if (!finalText) {
+        throw new Error('No readable content, metadata, or structured data found on this page.');
+      }
+
+      // If body content is empty but metadata was found, warn the user it's an SPA
+      if (!bodyText && (title || description || jsonLdContent)) {
+        console.warn('SPA detected: Dynamic page rendered empty body text, serving metadata instead.');
+      }
+
+      onContentExtracted(`\n--- 🔗 Content from ${url} ---\n${finalText.slice(0, 8000)}\n`);
       setStatus('success');
       setTimeout(() => { setStatus('idle'); setUrl(''); }, 2500);
     } catch (err: any) {
