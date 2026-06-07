@@ -199,5 +199,24 @@ Extracting text content from external URLs returned a "failed to fetch" red erro
 4. Built the assets, processed the single base64 bundle, pushed using clasp, and redeployed version 62 to the active deployment ID. 🏆🚀
 Resolution Status: ✅ Fully Resolved
 
+---
+
+📁 File Name / Reference: [SPA URL Extraction Empty Body Text](file:///c:/Users/traik/.gemini/antigravity-ide/Github%20Repo/Universal-Task-Structurer/src/components/UrlInput.tsx)
+File Type: Log / UI Code
+Record ID: TDB-011
+Date Processed: 2026-06-07
+Category / Tags: Software, UI/UX, Network, Apps Script
+
+🛑 Issue Identified
+Extracting tasks from dynamic dashboards or Single Page Applications (SPAs) like `dashboard.blaze.today` returns a red "No readable content found on this page" error. 🛑👀
+- The server-side proxy `fetchExternalUrl` retrieves the static HTML skeleton of the target page successfully. 🔌✅
+- Since Google Apps Script's `UrlFetchApp` does not execute client-side JavaScript, the body text remains empty, resulting in a DOM parsing failure. ❌🔠
+
+✅ Resolution Applied
+1. Diagnosed the root cause as a static crawler rendering limitation on client-side rendered SPA dashboards. 📐🔍
+2. Documented the recommended workflow fallback: users must copy-paste the rendered text directly or upload screenshots/images for AI OCR extraction. 📸📝
+Resolution Status: 🔄 Ongoing / Partial — UI error tooltip update pending to suggest copy-pasting for dynamic/login-walled sites.
+
+
 
 
