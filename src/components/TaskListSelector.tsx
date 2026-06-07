@@ -91,14 +91,14 @@ export function TaskListSelector({ onSend, isSending, selectedCount, totalCount,
   }
 
   return (
-    <div className="flex items-center gap-3 bg-gray-50 p-2 rounded-lg border border-gray-200 relative">
+    <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900/60 p-2 rounded-xl border border-slate-200 dark:border-slate-800/80 relative transition-all duration-300">
       {listError && (
-        <div className="absolute top-12 right-0 bg-red-100 border border-red-200 text-red-700 px-3 py-2 rounded shadow-lg z-50 text-xs w-64">
+        <div className="absolute top-12 right-0 bg-red-100 dark:bg-red-950/80 border border-red-200 dark:border-red-900/40 text-red-700 dark:text-red-300 px-3 py-2 rounded-xl shadow-lg z-50 text-xs w-64">
           <strong>Cannot connect to Google Tasks:</strong> {listError}
         </div>
       )}
       <div className="flex items-center gap-2">
-        <List className="w-4 h-4 text-gray-500" />
+        <List className="w-4 h-4 text-slate-500 dark:text-slate-400" />
         {isCreating ? (
           <div className="flex items-center gap-2">
             <input
@@ -106,15 +106,15 @@ export function TaskListSelector({ onSend, isSending, selectedCount, totalCount,
               value={newListName}
               onChange={(e) => setNewListName(e.target.value)}
               placeholder="New list name..."
-              className="text-sm border border-gray-300 rounded px-2 py-1 outline-none focus:border-blue-500 w-32 bg-white"
+              className="text-sm border border-slate-300 dark:border-slate-800 rounded-lg px-2 py-1 outline-none focus:border-neon-blue dark:focus:border-neon-cyan w-32 bg-white dark:bg-slate-950 text-slate-850 dark:text-slate-100 placeholder-slate-400"
               autoFocus
               onKeyDown={(e) => e.key === 'Enter' && handleCreateList()}
               disabled={isLoadingLists}
             />
-            <button onClick={handleCreateList} disabled={isLoadingLists} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded font-medium disabled:opacity-50 hover:bg-blue-200 transition-colors">
+            <button onClick={handleCreateList} disabled={isLoadingLists} className="text-xs bg-blue-100 dark:bg-slate-800 text-blue-700 dark:text-neon-cyan px-2 py-1 rounded-lg font-bold disabled:opacity-50 hover:bg-blue-200 dark:hover:bg-slate-700 transition-colors">
               {isLoadingLists ? <Loader2 className="w-3 h-3 animate-spin mx-1" /> : 'Add'}
             </button>
-            <button onClick={() => setIsCreating(false)} disabled={isLoadingLists} className="text-xs text-gray-500 px-2 py-1 hover:text-gray-700">Cancel</button>
+            <button onClick={() => setIsCreating(false)} disabled={isLoadingLists} className="text-xs text-slate-500 dark:text-slate-400 px-2 py-1 hover:text-slate-700 dark:hover:text-slate-200">Cancel</button>
           </div>
         ) : (
           <select
@@ -127,18 +127,18 @@ export function TaskListSelector({ onSend, isSending, selectedCount, totalCount,
               }
             }}
             disabled={isLoadingLists}
-            className="text-sm bg-transparent border-none outline-none font-medium text-gray-700 cursor-pointer disabled:opacity-50 max-w-[150px] truncate"
+            className="text-sm bg-transparent border-none outline-none font-bold text-slate-700 dark:text-slate-200 cursor-pointer disabled:opacity-50 max-w-[150px] truncate"
           >
-            {isLoadingLists && <option>Loading your lists...</option>}
+            {isLoadingLists && <option className="dark:bg-slate-900">Loading your lists...</option>}
             {!isLoadingLists && lists.map(list => (
-              <option key={list.id} title={list.title} value={list.id}>{list.title}</option>
+              <option key={list.id} title={list.title} value={list.id} className="dark:bg-slate-900 dark:text-slate-250">{list.title}</option>
             ))}
-            {!isLoadingLists && <option value="CREATE_NEW">➕ Create new list...</option>}
+            {!isLoadingLists && <option value="CREATE_NEW" className="dark:bg-slate-900 dark:text-slate-250">➕ Create new list...</option>}
           </select>
         )}
       </div>
 
-      <div className="w-px h-6 bg-gray-300 mx-1"></div>
+      <div className="w-px h-6 bg-slate-300 dark:bg-slate-800 mx-1"></div>
 
       <button
         onClick={() => {
@@ -147,10 +147,10 @@ export function TaskListSelector({ onSend, isSending, selectedCount, totalCount,
         }}
         disabled={isDisabled}
         className={cn(
-          "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+          "flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all active:scale-95",
           isDisabled
-            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-            : "bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+            ? "bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed border border-slate-200 dark:border-slate-800/30"
+            : "bg-neon-blue dark:bg-gradient-to-r dark:from-neon-cyan dark:to-neon-blue text-white dark:text-slate-950 shadow-sm hover:opacity-90 hover:shadow-[0_0_15px_rgba(34,211,238,0.25)]"
         )}
       >
         {buttonLabel}

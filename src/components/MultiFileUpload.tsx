@@ -88,8 +88,8 @@ export function MultiFileUpload({ onTextExtracted }: MultiFileUploadProps) {
         className={cn(
           'cursor-pointer rounded-xl border-2 border-dashed p-4 text-center transition-all duration-200 group',
           isDragActive
-            ? 'border-blue-400 bg-blue-50 scale-[1.01]'
-            : 'border-gray-200 bg-gray-50 hover:border-blue-300 hover:bg-blue-50/50',
+            ? 'border-neon-blue dark:border-neon-cyan bg-blue-50 dark:bg-slate-900/50 scale-[1.01]'
+            : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 hover:border-neon-blue dark:hover:border-neon-cyan hover:bg-blue-50/50 dark:hover:bg-slate-900/30',
         )}
       >
         <input {...getInputProps()} />
@@ -103,16 +103,16 @@ export function MultiFileUpload({ onTextExtracted }: MultiFileUploadProps) {
           <div>
             <p className={cn(
               'text-sm font-semibold transition-colors',
-              isDragActive ? 'text-blue-600' : 'text-gray-600 group-hover:text-blue-600',
+              isDragActive ? 'text-neon-blue dark:text-neon-cyan' : 'text-slate-600 dark:text-slate-400 group-hover:text-neon-blue dark:group-hover:text-neon-cyan',
             )}>
               {isDragActive ? 'Drop it like it\'s hot! 🔥' : 'Drop images or PDFs here'}
             </p>
-            <p className="text-[10px] text-gray-400 mt-0.5">
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
               📋 Whiteboards · 🧾 Receipts · 📝 Handwritten notes · 📄 PDFs
             </p>
           </div>
           {!isDragActive && (
-            <span className="text-[10px] font-medium text-blue-500 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">
+            <span className="text-[10px] font-bold text-neon-blue dark:text-neon-cyan bg-blue-50 dark:bg-slate-900 border border-blue-100 dark:border-slate-800 px-2.5 py-0.5 rounded-full">
               🔍 AI-powered OCR extraction
             </span>
           )}
@@ -127,9 +127,9 @@ export function MultiFileUpload({ onTextExtracted }: MultiFileUploadProps) {
               key={file.id}
               className={cn(
                 'relative rounded-xl p-2.5 flex items-center gap-2.5 border transition-all duration-300 overflow-hidden',
-                file.status === 'completed' ? 'bg-emerald-50 border-emerald-200' :
-                file.status === 'error'     ? 'bg-red-50    border-red-200'     :
-                                              'bg-white     border-gray-200',
+                file.status === 'completed' ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/30' :
+                file.status === 'error'     ? 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/30' :
+                                              'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-250',
               )}
             >
               {/* Progress bar fill */}
@@ -145,9 +145,9 @@ export function MultiFileUpload({ onTextExtracted }: MultiFileUploadProps) {
               {/* Icon */}
               <div className={cn(
                 'p-1.5 rounded-lg border shrink-0 z-10',
-                file.status === 'completed' ? 'bg-emerald-100 border-emerald-200 text-emerald-600' :
-                file.status === 'error'     ? 'bg-red-100    border-red-200    text-red-500'      :
-                                              'bg-blue-50    border-blue-100   text-blue-500',
+                file.status === 'completed' ? 'bg-emerald-100 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-900/40 text-emerald-600 dark:text-emerald-400' :
+                file.status === 'error'     ? 'bg-red-100 dark:bg-red-900/30 border-red-200 dark:border-red-900/40 text-red-500 dark:text-red-400' :
+                                              'bg-blue-50 dark:bg-slate-800 border-blue-100 dark:border-slate-700 text-blue-500 dark:text-neon-cyan',
               )}>
                 {file.status === 'completed' ? <CheckCircle2 className="w-3.5 h-3.5" /> :
                  file.status === 'error'     ? <AlertTriangle className="w-3.5 h-3.5" /> :
@@ -157,9 +157,9 @@ export function MultiFileUpload({ onTextExtracted }: MultiFileUploadProps) {
 
               {/* Info */}
               <div className="flex-1 min-w-0 z-10">
-                <p className="text-[10px] font-semibold text-gray-700 truncate">{file.name}</p>
+                <p className="text-[10px] font-bold text-slate-700 dark:text-slate-300 truncate">{file.name}</p>
                 <div className="flex items-center gap-2 mt-1">
-                  <div className="flex-1 h-1 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="flex-1 h-1 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
                     <div
                       className={cn(
                         'h-full rounded-full transition-all duration-500',
@@ -169,7 +169,7 @@ export function MultiFileUpload({ onTextExtracted }: MultiFileUploadProps) {
                       style={{ width: `${file.progress}%` }}
                     />
                   </div>
-                  <span className="text-[9px] font-mono text-gray-400 w-7 text-right shrink-0">
+                  <span className="text-[9px] font-mono text-slate-400 dark:text-slate-550 w-7 text-right shrink-0">
                     {file.status === 'completed' ? '✅' : file.status === 'error' ? '❌' : `${file.progress}%`}
                   </span>
                 </div>
@@ -177,7 +177,7 @@ export function MultiFileUpload({ onTextExtracted }: MultiFileUploadProps) {
 
               <button
                 onClick={() => removeFile(file.id)}
-                className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all z-10 shrink-0"
+                className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/35 rounded-lg transition-all z-10 shrink-0"
               >
                 <X className="w-3 h-3" />
               </button>

@@ -31,27 +31,27 @@ export function HistoryPanel({ history, onRestoreInput, onViewOutput, onClearHis
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col transition-all">
+    <div className="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-sm overflow-hidden flex flex-col transition-all duration-300">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors w-full text-left"
+        className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950/45 hover:bg-slate-100 dark:hover:bg-slate-900/50 transition-colors w-full text-left"
       >
-        <div className="flex items-center gap-2 text-gray-700 font-medium">
-          <History className="w-5 h-5 text-gray-500" />
+        <div className="flex items-center gap-2 text-slate-700 dark:text-slate-350 font-bold text-sm">
+          <History className="w-4 h-4 text-slate-500 dark:text-slate-400" />
           📜 Session History
           {history.length > 0 && (
-            <span className="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full ml-2">
+            <span className="bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold px-2 py-0.5 rounded-full ml-2">
               {history.length}
             </span>
           )}
         </div>
-        {isExpanded ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+        {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-400 dark:text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500" />}
       </button>
 
       {isExpanded && (
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-slate-200 dark:border-slate-800/80">
           {history.length === 0 ? (
-            <div className="text-center text-gray-500 py-4 text-sm">
+            <div className="text-center text-slate-500 dark:text-slate-400 py-4 text-sm">
               No history yet. Process a task to see it here.
             </div>
           ) : (
@@ -59,7 +59,7 @@ export function HistoryPanel({ history, onRestoreInput, onViewOutput, onClearHis
               <div className="flex justify-end mb-1">
                 <button
                   onClick={onClearHistory}
-                  className="flex items-center gap-1.5 text-xs font-medium text-red-600 hover:text-red-700 transition-colors"
+                  className="flex items-center gap-1.5 text-xs font-bold text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   Clear History
@@ -67,32 +67,32 @@ export function HistoryPanel({ history, onRestoreInput, onViewOutput, onClearHis
               </div>
               
               {history.map((entry) => (
-                <div key={entry.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50/50 hover:bg-gray-50 transition-colors">
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center gap-2 text-xs font-medium text-gray-500">
+                <div key={entry.id} className="border border-slate-200 dark:border-slate-800/60 rounded-xl p-3.5 bg-slate-50/50 dark:bg-slate-950/20 hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-all duration-200">
+                  <div className="flex justify-between items-start mb-2.5">
+                    <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
                       <span>🕐 {formatTime(entry.timestamp)}</span>
                       <span>•</span>
-                      <span className="text-blue-600">📊 {entry.tasks.length} tasks</span>
+                      <span className="text-neon-blue dark:text-neon-cyan">📊 {entry.tasks.length} tasks</span>
                     </div>
                   </div>
                   
-                  <p className="text-sm text-gray-700 mb-3 italic line-clamp-2">
+                  <p className="text-sm text-slate-700 dark:text-slate-300 mb-3.5 italic line-clamp-2">
                     "{entry.input.length > 60 ? entry.input.substring(0, 60) + '...' : entry.input || 'Image input'}"
                   </p>
                   
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => onRestoreInput(entry)}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 bg-white border border-gray-300 rounded text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
+                      className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm active:scale-[0.98]"
                     >
-                      <RotateCcw className="w-3.5 h-3.5" />
+                      <RotateCcw className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                       Restore Input
                     </button>
                     <button
                       onClick={() => onViewOutput(entry)}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 bg-blue-50 border border-blue-200 rounded text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors shadow-sm"
+                      className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-lg text-xs font-bold text-blue-755 dark:text-neon-cyan hover:bg-blue-100 dark:hover:bg-blue-950/40 transition-all shadow-sm active:scale-[0.98]"
                     >
-                      <FileText className="w-3.5 h-3.5" />
+                      <FileText className="w-3.5 h-3.5 text-blue-600 dark:text-neon-cyan" />
                       View Output
                     </button>
                   </div>

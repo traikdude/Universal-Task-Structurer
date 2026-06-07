@@ -79,10 +79,10 @@ export function TaskCard({ task, index, totalTasks, onUpdate, onDelete, onToggle
 
   // Priority Style Matrix
   const priorityStyles = {
-    'P0': 'border-red-500/50 text-red-400 bg-red-500/10 shadow-[0_0_15px_rgba(239,68,68,0.2)] animate-pulse',
-    'P1': 'border-orange-500/50 text-orange-400 bg-orange-500/10 shadow-[0_0_15px_rgba(249,115,22,0.2)]',
-    'P2': 'border-amber-500/50 text-amber-400 bg-amber-500/10 shadow-[0_0_15px_rgba(245,158,11,0.2)]',
-    'P3': 'border-emerald-500/50 text-emerald-400 bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
+    'P0': 'border-red-500/40 dark:border-red-500/50 text-red-600 dark:text-red-400 bg-red-500/10 shadow-[0_0_15px_rgba(239,68,68,0.15)] animate-pulse',
+    'P1': 'border-orange-500/40 dark:border-orange-500/50 text-orange-600 dark:text-orange-400 bg-orange-500/10 shadow-[0_0_15px_rgba(249,115,22,0.1)]',
+    'P2': 'border-amber-500/40 dark:border-amber-500/50 text-amber-600 dark:text-amber-400 bg-amber-500/10 shadow-[0_0_15px_rgba(245,158,11,0.1)]',
+    'P3': 'border-emerald-500/40 dark:border-emerald-500/50 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.1)]'
   };
 
   const currentPriorityStyle = priorityStyles[task.priority as keyof typeof priorityStyles] || priorityStyles['P3'];
@@ -97,7 +97,9 @@ export function TaskCard({ task, index, totalTasks, onUpdate, onDelete, onToggle
     <div 
       className={cn(
         "group relative glass-card overflow-hidden transition-all duration-500 rounded-2xl", 
-        task.isSelected ? "ring-2 ring-neon-cyan/40 bg-slate-900/80 shadow-[0_0_30px_rgba(34,211,238,0.1)]" : "border-slate-800 opacity-90 hover:opacity-100 hover:border-slate-700/50",
+        task.isSelected 
+          ? "ring-2 ring-neon-blue/40 dark:ring-neon-cyan/40 bg-white/90 dark:bg-slate-900/80 shadow-[0_0_30px_rgba(59,130,246,0.1)] dark:shadow-[0_0_30px_rgba(34,211,238,0.1)]" 
+          : "border-slate-200 dark:border-slate-800 opacity-90 hover:opacity-100 hover:border-slate-300 dark:hover:border-slate-700/50",
         isDeleting ? "opacity-0 scale-95 translate-x-10" : "opacity-100 scale-100 translate-x-0"
       )}
     >
@@ -107,7 +109,7 @@ export function TaskCard({ task, index, totalTasks, onUpdate, onDelete, onToggle
       )}
 
       {/* Drag Anchor */}
-      <div className="absolute top-1/2 -translate-y-1/2 left-2 text-slate-700 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
+      <div className="absolute top-1/2 -translate-y-1/2 left-2 text-slate-400 dark:text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
         <GripVertical className="w-5 h-5" />
       </div>
 
@@ -120,14 +122,14 @@ export function TaskCard({ task, index, totalTasks, onUpdate, onDelete, onToggle
               className={cn(
                 "w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-300",
                 task.isSelected 
-                  ? "bg-neon-cyan border-neon-cyan shadow-[0_0_15px_rgba(34,211,238,0.4)]" 
-                  : "border-slate-700 hover:border-slate-500 bg-slate-950/50"
+                  ? "bg-neon-blue dark:bg-neon-cyan border-neon-blue dark:border-neon-cyan shadow-[0_0_15px_rgba(59,130,246,0.4)] dark:shadow-[0_0_15px_rgba(34,211,238,0.4)]" 
+                  : "border-slate-300 dark:border-slate-750 hover:border-slate-400 dark:hover:border-slate-500 bg-white/50 dark:bg-slate-950/50"
               )}
             >
-              {task.isSelected && <CheckSquare className="w-4 h-4 text-slate-950 stroke-[3]" />}
+              {task.isSelected && <CheckSquare className="w-4 h-4 text-white dark:text-slate-950 stroke-[3]" />}
             </button>
             <div className="flex items-center gap-2">
-              <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1.5">
+              <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
                 <Hash className="w-3 h-3" /> OBJECTIVE {index + 1}
               </span>
               <select 
@@ -156,7 +158,9 @@ export function TaskCard({ task, index, totalTasks, onUpdate, onDelete, onToggle
               onClick={() => setIsRawEditMode(!isRawEditMode)}
               className={cn(
                 "p-2 rounded-xl transition-all",
-                isRawEditMode ? "bg-neon-cyan/20 text-neon-cyan shadow-[0_0_15px_rgba(34,211,238,0.2)]" : "text-slate-500 hover:text-neon-cyan hover:bg-slate-800"
+                isRawEditMode 
+                  ? "bg-neon-blue/15 dark:bg-neon-cyan/20 text-neon-blue dark:text-neon-cyan shadow-[0_0_15px_rgba(59,130,246,0.15)] dark:shadow-[0_0_15px_rgba(34,211,238,0.2)]" 
+                  : "text-slate-400 dark:text-slate-500 hover:text-neon-blue dark:hover:text-neon-cyan hover:bg-slate-100 dark:hover:bg-slate-850"
               )}
               title="Matrix View"
             >
@@ -164,7 +168,7 @@ export function TaskCard({ task, index, totalTasks, onUpdate, onDelete, onToggle
             </button>
             <button 
               onClick={handleDelete}
-              className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all"
+              className="p-2 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all"
               title="Purge Task"
             >
               <Trash2 className="w-4 h-4" />
@@ -182,15 +186,15 @@ export function TaskCard({ task, index, totalTasks, onUpdate, onDelete, onToggle
               onChange={(e) => setEditTitle(e.target.value)}
               onBlur={handleTitleSave}
               onKeyDown={handleTitleKeyDown}
-              className="text-xl font-black text-slate-100 w-full bg-slate-950/50 border-b-2 border-neon-cyan outline-none px-2 py-1 rounded-t-xl transition-all placeholder-slate-700"
+              className="text-xl font-black text-slate-900 dark:text-slate-100 w-full bg-slate-100/50 dark:bg-slate-950/50 border-b-2 border-neon-blue dark:border-neon-cyan outline-none px-2 py-1 rounded-t-xl transition-all placeholder-slate-400 dark:placeholder-slate-700"
             />
           ) : (
             <h3 
               onClick={() => setIsEditingTitle(true)}
-              className="text-xl font-black text-slate-100 cursor-text flex items-center gap-3 group/title"
+              className="text-xl font-black text-slate-900 dark:text-slate-100 cursor-text flex items-center gap-3 group/title"
             >
-              <span className="hover:text-neon-cyan transition-colors">{task.title}</span>
-              <Edit2 className="w-4 h-4 text-slate-700 opacity-0 group-hover/title:opacity-100 transition-opacity" />
+              <span className="hover:text-neon-blue dark:hover:text-neon-cyan transition-colors">{task.title}</span>
+              <Edit2 className="w-4 h-4 text-slate-400 dark:text-slate-700 opacity-0 group-hover/title:opacity-100 transition-opacity" />
             </h3>
           )}
         </div>
@@ -204,16 +208,16 @@ export function TaskCard({ task, index, totalTasks, onUpdate, onDelete, onToggle
                 onChange={(e) => setRawEditContent(e.target.value)}
                 onBlur={handleRawSave}
                 placeholder="Neural source code..."
-                className="w-full h-full p-4 text-xs font-mono bg-slate-950/80 text-neon-cyan/80 border border-slate-800 rounded-2xl resize-none outline-none focus:border-neon-cyan/40 transition-all scrollbar-thin shadow-inner"
+                className="w-full h-full p-4 text-xs font-mono bg-slate-50/80 dark:bg-slate-950/80 text-slate-800 dark:text-neon-cyan/80 border border-slate-200 dark:border-slate-800 rounded-2xl resize-none outline-none focus:border-neon-blue/40 dark:focus:border-neon-cyan/40 transition-all scrollbar-thin shadow-inner"
               />
-              <div className="markdown-body bg-slate-900/40 rounded-2xl p-4 border border-slate-800/50 overflow-y-auto scrollbar-thin">
+              <div className="markdown-body bg-slate-50/50 dark:bg-slate-900/40 rounded-2xl p-4 border border-slate-200 dark:border-slate-800/50 overflow-y-auto scrollbar-thin">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {rawEditContent}
                 </ReactMarkdown>
               </div>
             </div>
           ) : (
-            <div className="markdown-body bg-slate-950/20 rounded-2xl p-1 transition-all">
+            <div className="markdown-body bg-slate-100/40 dark:bg-slate-950/20 rounded-2xl p-2 transition-all">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {displayMarkdown}
               </ReactMarkdown>
@@ -222,20 +226,20 @@ export function TaskCard({ task, index, totalTasks, onUpdate, onDelete, onToggle
         </div>
         
         {/* Footer: Date & Time Telemetry */}
-        <div className="pt-4 border-t border-slate-800/50 flex flex-wrap items-center gap-6">
+        <div className="pt-4 border-t border-slate-200 dark:border-slate-800/50 flex flex-wrap items-center gap-6">
           <div className="flex flex-col gap-1.5">
-            <label className="text-[9px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1.5 ml-1">
-              <Calendar className="w-3 h-3 text-neon-cyan" /> DEPLOYMENT DATE
+            <label className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1.5 ml-1">
+              <Calendar className="w-3 h-3 text-neon-blue dark:text-neon-cyan" /> DEPLOYMENT DATE
             </label>
             <input 
               type="date" 
               value={task.dueDate}
               onChange={(e) => onUpdate(task.id, { dueDate: e.target.value })}
-              className="w-full bg-slate-950/50 border border-slate-800 hover:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-200 outline-none focus:border-neon-cyan/40 transition-all cursor-pointer shadow-inner"
+              className="w-full bg-slate-100/60 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:border-neon-blue dark:focus:border-neon-cyan/40 transition-all cursor-pointer shadow-inner"
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-[9px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1.5 ml-1">
+            <label className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1.5 ml-1">
               <Clock className="w-3 h-3 text-neon-pink" /> PRECISION TIME
             </label>
             <div className="relative group/time">
@@ -243,17 +247,17 @@ export function TaskCard({ task, index, totalTasks, onUpdate, onDelete, onToggle
                 type="time" 
                 value={task.dueTime}
                 onChange={(e) => onUpdate(task.id, { dueTime: e.target.value })}
-                className="w-full bg-slate-950/50 border border-slate-800 hover:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-200 outline-none focus:border-neon-pink/40 transition-all cursor-pointer shadow-inner pr-10"
+                className="w-full bg-slate-100/60 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:border-neon-pink/40 transition-all cursor-pointer shadow-inner pr-10"
               />
               {!task.dueTime && (
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-600 italic pointer-events-none group-hover/time:text-neon-pink/40 transition-colors">TBD</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 dark:text-slate-600 italic pointer-events-none group-hover/time:text-neon-pink/40 transition-colors">TBD</span>
               )}
             </div>
           </div>
           
           <div className="ml-auto flex flex-col gap-1.5 items-end">
-             <label className="text-[9px] font-black text-slate-600 uppercase tracking-widest ml-1">TARGET CLUSTER</label>
-             <div className="text-[10px] font-black text-neon-cyan bg-neon-cyan/10 px-3 py-2 rounded-xl border border-neon-cyan/30 shadow-[0_0_10px_rgba(34,211,238,0.1)] uppercase tracking-wider">
+             <label className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">TARGET CLUSTER</label>
+             <div className="text-[10px] font-black text-neon-blue dark:text-neon-cyan bg-neon-blue/10 dark:bg-neon-cyan/10 px-3 py-2 rounded-xl border border-neon-blue/20 dark:border-neon-cyan/30 shadow-[0_0_10px_rgba(59,130,246,0.05)] dark:shadow-[0_0_10px_rgba(34,211,238,0.1)] uppercase tracking-wider">
                {task.suggestedList || 'System Default'}
              </div>
           </div>

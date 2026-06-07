@@ -49,16 +49,16 @@ export function UrlInput({ onContentExtracted }: UrlInputProps) {
 
   return (
     <div className="mt-3">
-      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5 px-1">
+      <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 px-1">
         🔗 Extract from URL
       </p>
       <div className={cn(
-        'flex items-center gap-2 rounded-xl border bg-white px-3 py-2 transition-all duration-200',
+        'flex items-center gap-2 rounded-xl border px-3 py-2 transition-all duration-200',
         status === 'error'
-          ? 'border-red-300 ring-2 ring-red-100'
+          ? 'border-red-300 dark:border-red-900/50 ring-2 ring-red-100 dark:ring-red-950/30 bg-red-50/10'
           : status === 'success'
-          ? 'border-emerald-300 ring-2 ring-emerald-100'
-          : 'border-gray-200 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100',
+          ? 'border-emerald-305 dark:border-emerald-900/50 ring-2 ring-emerald-100 dark:ring-emerald-950/30 bg-emerald-50/10'
+          : 'bg-white dark:bg-slate-950/40 border-slate-200 dark:border-slate-800 focus-within:border-neon-blue dark:focus-within:border-neon-cyan focus-within:ring-2 focus-within:ring-blue-100 dark:focus-within:ring-cyan-950/35',
       )}>
         <span className="text-base shrink-0">
           {status === 'success' ? '✅' : status === 'error' ? '⚠️' : '🌐'}
@@ -69,13 +69,13 @@ export function UrlInput({ onContentExtracted }: UrlInputProps) {
           onChange={e => { setUrl(e.target.value); setStatus('idle'); }}
           onKeyDown={handleKey}
           placeholder="https://paste-any-url-here.com"
-          className="flex-1 text-sm text-gray-800 placeholder-gray-400 outline-none bg-transparent"
+          className="flex-1 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 outline-none bg-transparent"
           disabled={status === 'loading'}
         />
         {url && (
           <button
             onClick={() => { setUrl(''); setStatus('idle'); }}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -84,10 +84,10 @@ export function UrlInput({ onContentExtracted }: UrlInputProps) {
           onClick={handleFetch}
           disabled={!url.trim() || status === 'loading'}
           className={cn(
-            'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 shrink-0',
+            'px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 shrink-0 active:scale-95',
             status === 'loading'
-              ? 'bg-gray-100 text-gray-400 cursor-wait'
-              : 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95 shadow-sm',
+              ? 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-600 cursor-wait'
+              : 'bg-neon-blue dark:bg-gradient-to-r dark:from-neon-cyan dark:to-neon-blue text-white dark:text-slate-950 hover:opacity-90 shadow-sm hover:shadow-[0_0_10px_rgba(34,211,238,0.25)]',
           )}
         >
           {status === 'loading'
@@ -97,7 +97,7 @@ export function UrlInput({ onContentExtracted }: UrlInputProps) {
         </button>
       </div>
       {status === 'error' && errorMsg && (
-        <p className="mt-1.5 text-xs text-red-500 px-1 flex items-center gap-1">
+        <p className="mt-1.5 text-xs text-red-500 dark:text-red-400 px-1 flex items-center gap-1 font-medium">
           <AlertTriangle className="w-3 h-3 shrink-0" /> {errorMsg}
         </p>
       )}

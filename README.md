@@ -8,7 +8,8 @@
 
 A professional AI-powered task extraction app that turns messy notes, images, or URLs into perfectly structured Google Tasks.
 
-🌐 **Live App:** [https://universal-task-structurer.vercel.app](https://universal-task-structurer.vercel.app)
+🌐 **Live Web App (Vercel):** [https://universal-task-structurer.vercel.app](https://universal-task-structurer.vercel.app)
+🌐 **Google Apps Script Web App:** [https://script.google.com/macros/s/AKfycbzRCkuQUWi9FZ7UK2WSNk7nf0w0mEmPrNs9ArKYpIyDHfhMIubG1Zo5rl3ZDuCT00tN/exec](https://script.google.com/macros/s/AKfycbzRCkuQUWi9FZ7UK2WSNk7nf0w0mEmPrNs9ArKYpIyDHfhMIubG1Zo5rl3ZDuCT00tN/exec)
 
 Originally exported from Google AI Studio, this project has been fully enhanced into a production-ready React / Vite application.
 

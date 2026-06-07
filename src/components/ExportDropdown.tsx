@@ -43,15 +43,15 @@ export function ExportDropdown({
         onClick={onExportMarkdown}
         disabled={disabled}
         className={cn(
-          "flex items-center gap-1.5 text-sm font-medium transition-colors px-3 py-1.5 rounded-l-md border border-r-0 shadow-sm",
+          "flex items-center gap-1.5 text-xs font-bold transition-all px-3.5 py-2 rounded-l-xl border border-r-0 shadow-sm active:scale-[0.98]",
           disabled
-            ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
-            : "border-gray-200 bg-white text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+            ? "border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-600 cursor-not-allowed"
+            : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800"
         )}
       >
-        {copied ? <Check className="w-4 h-4 text-green-600" /> : 
-         downloaded ? <Check className="w-4 h-4 text-green-600" /> : 
-         <Copy className="w-4 h-4" />}
+        {copied ? <Check className="w-3.5 h-3.5 text-green-600 dark:text-emerald-400" /> : 
+         downloaded ? <Check className="w-3.5 h-3.5 text-green-600 dark:text-emerald-400" /> : 
+         <Copy className="w-3.5 h-3.5" />}
         {copied ? 'Copied!' : downloaded ? 'Downloaded!' : 'Copy'}
       </button>
       
@@ -59,36 +59,36 @@ export function ExportDropdown({
         onClick={() => setIsOpen(!isOpen)}
         disabled={disabled}
         className={cn(
-          "flex items-center px-2 py-1.5 rounded-r-md border shadow-sm transition-colors",
+          "flex items-center px-2 py-2 rounded-r-xl border shadow-sm transition-all active:scale-[0.98]",
           disabled
-            ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
-            : "border-gray-200 bg-white text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+            ? "border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-600 cursor-not-allowed"
+            : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-905 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800"
         )}
       >
-        <ChevronDown className="w-4 h-4" />
+        <ChevronDown className="w-3.5 h-3.5" />
       </button>
 
       {isOpen && !disabled && (
-        <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50 py-1">
+        <div className="absolute right-0 top-full mt-1.5 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg z-50 py-1.5 overflow-hidden transition-all animate-slide-down">
           <button
             onClick={() => handleAction(onExportMarkdown)}
-            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+            className="w-full text-left px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-55 dark:hover:bg-slate-800 flex items-center gap-2"
           >
-            <Copy className="w-4 h-4 text-gray-400" />
+            <Copy className="w-4 h-4 text-slate-400 dark:text-slate-500" />
             📋 Copy as Markdown
           </button>
           <button
             onClick={() => handleAction(onExportCSV)}
-            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+            className="w-full text-left px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-55 dark:hover:bg-slate-800 flex items-center gap-2"
           >
-            <Table className="w-4 h-4 text-gray-400" />
+            <Table className="w-4 h-4 text-slate-400 dark:text-slate-500" />
             📊 Export as CSV
           </button>
           <button
             onClick={() => handleAction(onExportPlainText)}
-            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+            className="w-full text-left px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-55 dark:hover:bg-slate-800 flex items-center gap-2"
           >
-            <FileText className="w-4 h-4 text-gray-400" />
+            <FileText className="w-4 h-4 text-slate-400 dark:text-slate-500" />
             📄 Export as Plain Text
           </button>
         </div>

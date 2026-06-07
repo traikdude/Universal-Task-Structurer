@@ -479,7 +479,6 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
 
   const [activeTab, setActiveTab] = React.useState<'input' | 'output'>('input');
 
-  // 📱 Mobile UX: auto-switch to Output tab when processing completes with results
   React.useEffect(() => {
     if (!isProcessing && tasks.length > 0) {
       setActiveTab('output');
@@ -487,30 +486,30 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
   }, [isProcessing, tasks.length]);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col font-sans transition-colors duration-500">
       {/* 🏠 Header */}
-      <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between sticky top-0 z-10 shadow-sm">
+      <header className="bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between sticky top-0 z-10 shadow-sm backdrop-blur-md transition-colors duration-300">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <div className="bg-blue-600 p-1.5 sm:p-2 rounded-xl shadow-sm shrink-0">
-            <CheckSquare className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+          <div className="bg-neon-blue dark:bg-neon-cyan p-1.5 sm:p-2 rounded-xl shadow-sm shrink-0">
+            <CheckSquare className="w-4 h-4 sm:w-5 sm:h-5 text-white dark:text-slate-950" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-base sm:text-lg font-bold text-gray-900 tracking-tight truncate">
-              ✅ <span className="hidden xs:inline">Universal </span>Task Structurer
+            <h1 className="text-base sm:text-lg font-black tracking-tight truncate flex items-center gap-1.5 text-slate-900 dark:text-white">
+              ✅ <span className="gradient-text"><span className="hidden xs:inline">Universal </span>Task Structurer</span>
             </h1>
-            <p className="text-[10px] sm:text-xs text-gray-500 hidden sm:block">✨ Transform any text or image into a structured Google Task 🚀</p>
+            <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 hidden sm:block">✨ Transform any text or image into a structured Google Task 🚀</p>
           </div>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           {!isOnline && (
-            <div className="flex items-center gap-1 text-amber-700 bg-amber-50 px-2 py-1 rounded-full text-[10px] font-semibold border border-amber-200">
+            <div className="flex items-center gap-1 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-2 py-1 rounded-full text-[10px] font-semibold border border-amber-200 dark:border-amber-900/30">
               <WifiOff className="w-3 h-3" />
               <span className="hidden sm:inline">📵 Offline</span>
             </div>
           )}
           {accessToken ? (
             accessToken === 'gas-native' ? (
-              <div className="flex items-center gap-1 text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-xl text-xs font-semibold border border-emerald-200">
+              <div className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-2.5 py-1.5 rounded-xl text-xs font-semibold border border-emerald-200 dark:border-emerald-900/30">
                 <span>🟢 Connected (GAS)</span>
               </div>
             ) : (
@@ -521,14 +520,14 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
           ) : (
             <button
               onClick={() => login()}
-              className="flex items-center gap-1.5 bg-blue-600 text-white text-[11px] sm:text-xs font-semibold px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl hover:bg-blue-700 active:scale-95 transition-all shadow-sm"
+              className="flex items-center gap-1.5 bg-neon-blue dark:bg-gradient-to-r dark:from-neon-cyan dark:to-neon-blue text-white dark:text-slate-950 text-[11px] sm:text-xs font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl hover:opacity-90 active:scale-95 transition-all shadow-sm"
             >
               🔗 <span className="hidden sm:inline">Connect </span>Tasks
             </button>
           )}
           <button
             onClick={() => setIsDarkMode(!isDarkMode)}
-            className="p-1.5 sm:p-2 rounded-xl hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-all"
+            className="p-1.5 sm:p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all"
             title="Toggle theme"
           >
             {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -538,14 +537,14 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
 
       {/* Main Content */}
       {/* 📱 Mobile Tab Bar — only visible on small screens */}
-      <div className="lg:hidden bg-white border-b border-gray-200 flex sticky top-[56px] z-10 shadow-sm">
+      <div className="lg:hidden bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex sticky top-[56px] z-10 shadow-sm transition-colors duration-300">
         <button
           onClick={() => setActiveTab('input')}
           className={cn(
-            'flex-1 py-2.5 text-sm font-semibold flex items-center justify-center gap-2 border-b-2 transition-all',
+            'flex-1 py-2.5 text-sm font-bold flex items-center justify-center gap-2 border-b-2 transition-all',
             activeTab === 'input'
-              ? 'border-blue-600 text-blue-600 bg-blue-50/50'
-              : 'border-transparent text-gray-500 hover:text-gray-700',
+              ? 'border-neon-blue dark:border-neon-cyan text-neon-blue dark:text-neon-cyan bg-blue-50/50 dark:bg-slate-800/40'
+              : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200',
           )}
         >
           ✏️ Input
@@ -553,22 +552,22 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
         <button
           onClick={() => setActiveTab('output')}
           className={cn(
-            'flex-1 py-2.5 text-sm font-semibold flex items-center justify-center gap-2 border-b-2 transition-all',
+            'flex-1 py-2.5 text-sm font-bold flex items-center justify-center gap-2 border-b-2 transition-all',
             activeTab === 'output'
-              ? 'border-blue-600 text-blue-600 bg-blue-50/50'
-              : 'border-transparent text-gray-500 hover:text-gray-700',
+              ? 'border-neon-blue dark:border-neon-cyan text-neon-blue dark:text-neon-cyan bg-blue-50/50 dark:bg-slate-800/40'
+              : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200',
           )}
         >
           🧠 Output
           {tasks.length > 0 && (
-            <span className="bg-blue-100 text-blue-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+            <span className="bg-blue-100 dark:bg-slate-800 text-blue-700 dark:text-neon-cyan text-[10px] font-bold px-1.5 py-0.5 rounded-full">
               {tasks.length}
             </span>
           )}
         </button>
       </div>
 
-      <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-4 md:p-6 lg:grid lg:grid-cols-2 gap-6 relative z-10">
+      <main className="flex-1 max-w-[1400px] w-full mx-auto p-3 sm:p-4 md:p-6 lg:grid lg:grid-cols-2 gap-6 relative z-10">
         
         {/* Input Column */}
         <div className={cn(
@@ -581,7 +580,9 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
           
           <div className={cn(
             "flex-1 relative rounded-2xl joy-card overflow-hidden flex flex-col",
-            !isValid && inputLength > 0 ? "border-red-300 ring-2 ring-red-100" : "focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100",
+            !isValid && inputLength > 0 
+              ? "border-red-300 dark:border-red-900/50 ring-2 ring-red-100 dark:ring-red-900/20" 
+              : "focus-within:border-neon-blue dark:focus-within:border-neon-cyan focus-within:ring-2 focus-within:ring-blue-100 dark:focus-within:ring-cyan-950/35",
           )}>
             <textarea
               value={input}
@@ -589,10 +590,10 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
               placeholder="✏️  Paste your notes, meeting transcripts, or to-do lists here...
 
 💡 Tip: You can also drop images & PDFs below for AI-powered OCR! 👇"
-              className="w-full p-4 sm:p-5 resize-none outline-none text-gray-800 bg-transparent text-sm placeholder-gray-400 leading-relaxed font-sans min-h-[180px] lg:flex-1"
+              className="w-full p-4 sm:p-5 resize-none outline-none text-slate-800 dark:text-slate-100 bg-transparent text-sm placeholder-slate-400 dark:placeholder-slate-600 leading-relaxed font-sans min-h-[180px] lg:flex-1"
             />
             
-            <div className="px-4 pb-2 bg-gray-50 border-t border-gray-100">
+            <div className="px-4 pb-2 bg-slate-50/60 dark:bg-slate-950/40 border-t border-slate-100 dark:border-slate-800/50">
               <MultiFileUpload 
                 onTextExtracted={(text) => {
                   setInput(prev => prev + text);
@@ -605,8 +606,8 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
               />
             </div>
 
-            <div className="p-4 bg-white border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-3">
-              <div className="flex items-center gap-3 text-[11px] text-gray-400">
+            <div className="p-4 bg-white dark:bg-slate-900/60 border-t border-slate-100 dark:border-slate-800/50 flex flex-col sm:flex-row justify-between items-center gap-3">
+              <div className="flex items-center gap-3 text-[11px] text-slate-400 dark:text-slate-500">
                 <VoiceInput 
                   onTranscript={(text) => {
                     setInput(prev => prev + (prev && !prev.endsWith(' ') ? ' ' : '') + text);
@@ -614,7 +615,7 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
                 />
                 <span className={cn(
                   "font-mono",
-                  isTooLong ? "text-red-500" : inputLength > MAX_CHARS * 0.9 ? "text-amber-500" : "text-gray-400"
+                  isTooLong ? "text-red-500" : inputLength > MAX_CHARS * 0.9 ? "text-amber-500" : "text-slate-400 dark:text-slate-500"
                 )}>
                   {inputLength.toLocaleString()} / {MAX_CHARS.toLocaleString()} chars
                 </span>
@@ -624,10 +625,10 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
                 onClick={handleProcess}
                 disabled={!isValid || isProcessing || !isOnline}
                 className={cn(
-                  "flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all w-full sm:w-auto justify-center",
+                  "flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all w-full sm:w-auto justify-center shadow-sm",
                   !isValid || isProcessing || !isOnline
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
-                    : "bg-blue-600 text-white hover:bg-blue-700 active:scale-95 shadow-sm hover:shadow-md"
+                    ? "bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-600 cursor-not-allowed border border-slate-200 dark:border-slate-800/50"
+                    : "joy-btn-primary hover:shadow-md"
                 )}
               >
                 {isProcessing ? (
@@ -663,10 +664,10 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
           style={{ animationDelay: '100ms' }}
         >
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
-            <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+            <h2 className="text-sm font-black text-slate-700 dark:text-slate-300 flex items-center gap-2 uppercase tracking-wider">
               🧠 Intelligence Output
               {tasks.length > 0 && (
-                <span className="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-0.5 rounded-full font-bold ml-1">
+                <span className="bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 text-[10px] px-2 py-0.5 rounded-full font-bold ml-1 border border-emerald-200/50 dark:border-emerald-900/30">
                   {tasks.length} found
                 </span>
               )}
@@ -674,9 +675,9 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
             
             {tasks.length > 0 && !isProcessing && (
               <div className="flex items-center gap-2 flex-wrap">
-                <div className="flex items-center gap-1 mr-2 border-r border-gray-200 pr-3">
-                  <button onClick={undo} disabled={!canUndo} className={cn("p-1.5 rounded-lg transition-all", canUndo ? "text-gray-500 hover:text-blue-600 hover:bg-blue-50" : "text-gray-300 cursor-not-allowed")} title="Undo (Ctrl+Z)"><Undo className="w-4 h-4" /></button>
-                  <button onClick={redo} disabled={!canRedo} className={cn("p-1.5 rounded-lg transition-all", canRedo ? "text-gray-500 hover:text-blue-600 hover:bg-blue-50" : "text-gray-300 cursor-not-allowed")} title="Redo (Ctrl+Y)"><Redo className="w-4 h-4" /></button>
+                <div className="flex items-center gap-1 mr-2 border-r border-slate-200 dark:border-slate-800 pr-3">
+                  <button onClick={undo} disabled={!canUndo} className={cn("p-1.5 rounded-lg transition-all", canUndo ? "text-slate-500 dark:text-slate-400 hover:text-neon-blue dark:hover:text-neon-cyan hover:bg-slate-100 dark:hover:bg-slate-800" : "text-slate-300 dark:text-slate-700 cursor-not-allowed")} title="Undo (Ctrl+Z)"><Undo className="w-4 h-4" /></button>
+                  <button onClick={redo} disabled={!canRedo} className={cn("p-1.5 rounded-lg transition-all", canRedo ? "text-slate-500 dark:text-slate-400 hover:text-neon-blue dark:hover:text-neon-cyan hover:bg-slate-100 dark:hover:bg-slate-800" : "text-slate-300 dark:text-slate-700 cursor-not-allowed")} title="Redo (Ctrl+Y)"><Redo className="w-4 h-4" /></button>
                 </div>
                 <TaskListSelector 
                   onSend={handleSendToTasks} 
@@ -701,7 +702,7 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
 
           <div className="flex-1 rounded-2xl joy-card overflow-hidden flex flex-col relative min-h-[400px] lg:min-h-0">
             {isProcessing && streamingContent ? (
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-white">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-white dark:bg-slate-900/40">
                 <div className="markdown-body opacity-80">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {streamingContent + ' ▌'}
@@ -709,38 +710,38 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
                 </div>
               </div>
             ) : isProcessing ? (
-              <div className="absolute inset-0 bg-white/90 backdrop-blur-md z-20 flex flex-col items-center justify-center gap-4">
+              <div className="absolute inset-0 bg-white/90 dark:bg-slate-950/80 backdrop-blur-md z-20 flex flex-col items-center justify-center gap-4">
                 <div className="relative">
-                  <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
-                  <Loader2 className="w-8 h-8 text-blue-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                  <div className="w-16 h-16 border-4 border-slate-100 dark:border-slate-850 border-t-neon-blue dark:border-t-neon-cyan rounded-full animate-spin"></div>
+                  <Loader2 className="w-8 h-8 text-neon-blue dark:text-neon-cyan absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                 </div>
-                <p className="text-gray-500 font-semibold text-sm animate-pulse">🧠 Analyzing your notes...</p>
+                <p className="text-slate-500 dark:text-slate-400 font-semibold text-sm animate-pulse">🧠 Analyzing your notes...</p>
               </div>
             ) : error ? (
-              <div className="flex-1 p-8 flex flex-col items-center justify-center text-center">
-                <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center mb-4">
-                  <AlertCircle className="w-8 h-8 text-red-400" />
+              <div className="flex-1 p-8 flex flex-col items-center justify-center text-center bg-white dark:bg-slate-900/40">
+                <div className="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 flex items-center justify-center mb-4">
+                  <AlertCircle className="w-8 h-8 text-red-400 dark:text-red-400" />
                 </div>
-                <p className="text-red-500 font-semibold mb-6 max-w-md text-sm">{error}</p>
+                <p className="text-red-500 dark:text-red-400 font-semibold mb-6 max-w-md text-sm">{error}</p>
                 <button
                   onClick={handleProcess}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-red-50 border border-red-200 text-red-600 rounded-xl hover:bg-red-500 hover:text-white hover:border-red-500 transition-all font-semibold text-sm active:scale-95"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-500 hover:text-white dark:hover:bg-red-500 dark:hover:text-white transition-all font-bold text-sm active:scale-95 shadow-sm"
                 >
                   <RefreshCw className="w-4 h-4" />
                   🔄 Try Again
                 </button>
               </div>
             ) : tasks.length > 0 ? (
-              <div className="flex-1 overflow-y-auto p-3 sm:p-4">
-                <div className="flex justify-between items-center mb-3 px-3 py-2 rounded-xl bg-gray-50 border border-gray-200">
-                  <div className="flex items-center gap-3 text-[11px] font-semibold text-gray-500">
+              <div className="flex-1 overflow-y-auto p-3 sm:p-4 bg-white dark:bg-slate-900/20">
+                <div className="flex justify-between items-center mb-3 px-3 py-2 rounded-xl bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200 dark:border-slate-800/80">
+                  <div className="flex items-center gap-3 text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                     <span>Sort:</span>
-                    <button onClick={() => handleSort('priority')} className={cn("transition-all px-2 py-0.5 rounded-lg", sortConfig?.key === 'priority' ? "text-blue-600 bg-blue-50" : "text-gray-400 hover:text-gray-700 hover:bg-gray-100")}>🔴 Priority {sortConfig?.key === 'priority' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</button>
-                    <button onClick={() => handleSort('dueDate')} className={cn("transition-all px-2 py-0.5 rounded-lg", sortConfig?.key === 'dueDate' ? "text-blue-600 bg-blue-50" : "text-gray-400 hover:text-gray-700 hover:bg-gray-100")}>📅 Date {sortConfig?.key === 'dueDate' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</button>
+                    <button onClick={() => handleSort('priority')} className={cn("transition-all px-2 py-0.5 rounded-lg", sortConfig?.key === 'priority' ? "text-neon-blue dark:text-neon-cyan bg-blue-50 dark:bg-slate-800" : "text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800")}>🔴 Priority {sortConfig?.key === 'priority' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</button>
+                    <button onClick={() => handleSort('dueDate')} className={cn("transition-all px-2 py-0.5 rounded-lg", sortConfig?.key === 'dueDate' ? "text-neon-blue dark:text-neon-cyan bg-blue-50 dark:bg-slate-800" : "text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800")}>📅 Date {sortConfig?.key === 'dueDate' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</button>
                   </div>
                   <button
                     onClick={handleToggleAll}
-                    className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 transition-colors px-2 py-0.5 rounded-lg hover:bg-blue-50"
+                    className="text-[11px] font-black text-neon-blue dark:text-neon-cyan hover:text-blue-800 dark:hover:text-cyan-400 transition-colors px-2 py-0.5 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-800 uppercase tracking-wider"
                   >
                     {selectedCount === tasks.length ? '☑️ Deselect All' : '✅ Select All'}
                   </button>
@@ -781,17 +782,17 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
                 </DragDropContext>
               </div>
             ) : (
-              <div className="flex-1 p-8 flex flex-col items-center justify-center text-center gap-5">
+              <div className="flex-1 p-8 flex flex-col items-center justify-center text-center gap-5 bg-white dark:bg-slate-900/20">
                 {/* 🌟 Hero Icon */}
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-100 rounded-3xl flex items-center justify-center shadow-sm animate-bounce-in">
-                  <span className="text-4xl">🧠</span>
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-900 dark:to-slate-950 border-2 border-blue-100 dark:border-slate-800 rounded-3xl flex items-center justify-center shadow-sm animate-bounce-in">
+                  <span className="text-4xl animate-pulse-slow">🧠</span>
                 </div>
 
                 <div className="space-y-1.5">
-                  <h3 className="text-lg font-bold text-gray-800">🎯 Ready to Structure!</h3>
-                  <p className="text-sm text-gray-500 max-w-xs leading-relaxed">
+                  <h3 className="text-lg font-black text-slate-800 dark:text-slate-100">🎯 Ready to Structure!</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed">
                     Paste your unstructured notes on the left, then click
-                    <span className="font-semibold text-blue-600"> ⚡ Process Intelligence </span>
+                    <span className="font-bold text-neon-blue dark:text-neon-cyan"> ⚡ Process Intelligence </span>
                     to extract clean, actionable tasks! ✨
                   </p>
                 </div>
@@ -799,19 +800,19 @@ const handleUpdateTask = (id: string, updates: Partial<Task>) => {
                 {/* 📋 Step Cards */}
                 <div className="flex flex-col gap-2 w-full max-w-xs">
                   {[
-                    { emoji: '✏️', label: 'Paste notes, lists, or meeting transcripts', color: 'bg-blue-50 border-blue-100' },
-                    { emoji: '🖼️', label: 'Or upload images & PDFs for OCR magic!',     color: 'bg-purple-50 border-purple-100' },
-                    { emoji: '⚡', label: 'Click Process Intelligence',                  color: 'bg-amber-50 border-amber-100' },
-                    { emoji: '📤', label: 'Send structured tasks to Google Tasks 🎉',   color: 'bg-emerald-50 border-emerald-100' },
+                    { emoji: '✏️', label: 'Paste notes, lists, or meeting transcripts', color: 'bg-blue-50/50 dark:bg-blue-950/15 border-blue-100/60 dark:border-blue-900/30 text-blue-700 dark:text-blue-400' },
+                    { emoji: '🖼️', label: 'Or upload images & PDFs for OCR magic!',     color: 'bg-purple-50/50 dark:bg-purple-950/15 border-purple-100/60 dark:border-purple-900/30 text-purple-700 dark:text-purple-400' },
+                    { emoji: '⚡', label: 'Click Process Intelligence',                  color: 'bg-amber-50/50 dark:bg-amber-950/15 border-amber-100/60 dark:border-amber-900/30 text-amber-700 dark:text-amber-400' },
+                    { emoji: '📤', label: 'Send structured tasks to Google Tasks 🎉',   color: 'bg-emerald-50/50 dark:bg-emerald-950/15 border-emerald-100/60 dark:border-emerald-900/30 text-emerald-700 dark:text-emerald-400' },
                   ].map(({ emoji, label, color }, i) => (
                     <div key={i} className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border text-left ${color}`}>
                       <span className="text-lg w-6 text-center shrink-0">{emoji}</span>
-                      <span className="text-xs font-medium text-gray-600">{label}</span>
+                      <span className="text-xs font-semibold">{label}</span>
                     </div>
                   ))}
                 </div>
 
-                <p className="text-[10px] text-gray-400 mt-1">🌈 Powered by Gemini AI · Built with ❤️</p>
+                <p className="text-[10px] text-slate-400 mt-1 dark:text-slate-500">🌈 Powered by Gemini AI · Built with ❤️</p>
               </div>
             )}
           </div>
