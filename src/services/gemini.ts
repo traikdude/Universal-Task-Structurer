@@ -5,9 +5,9 @@ import { SYSTEM_PROMPT } from '../constants/systemPrompt';
 
 // Model fallback chain: try the best available, degrade gracefully.
 const MODEL_CHAIN = [
-  'gemini-2.5-flash-preview-04-17',
-  'gemini-2.0-flash',
-  'gemini-1.5-flash',
+  'gemini-3.5-flash',
+  'gemini-3.1-pro-preview',
+  'gemini-3.1-flash-lite',
 ];
 
 // ── Custom Error Class ───────────────────────────────────────────────────────
