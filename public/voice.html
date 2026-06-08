@@ -142,6 +142,7 @@
       margin-bottom: 16px;
       min-height: 20px;
       transition: color 0.2s ease;
+      text-align: center;
     }
 
     .status-text.listening {
@@ -182,6 +183,7 @@
       display: flex;
       gap: 10px;
       width: 100%;
+      margin-bottom: 12px;
     }
 
     .btn {
@@ -224,6 +226,29 @@
       opacity: 0.4;
       cursor: not-allowed;
     }
+
+    /* Diagnostic Console Panel */
+    .console-panel {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-family: monospace;
+      font-size: 9px;
+      color: #38bdf8;
+      text-align: left;
+      max-height: 60px;
+      overflow-y: auto;
+    }
+
+    .console-line {
+      margin-bottom: 2px;
+      word-break: break-all;
+    }
+
+    .console-err { color: #ef4444; }
+    .console-success { color: #4ade80; }
 
     /* Soundwaves animation */
     .soundwaves {
@@ -291,6 +316,11 @@
       <button class="btn btn-secondary" id="clearBtn" disabled>🗑️ Clear</button>
       <button class="btn btn-primary" id="sendBtn" disabled>⚡ Send to App</button>
     </div>
+
+    <!-- Diagnostic Log Console -->
+    <div class="console-panel" id="consolePanel">
+      <div class="console-line">[System] Initializing speech engine...</div>
+    </div>
   </div>
 
   <script>
@@ -300,14 +330,26 @@
     const waves = document.getElementById('waves');
     const clearBtn = document.getElementById('clearBtn');
     const sendBtn = document.getElementById('sendBtn');
+    const consolePanel = document.getElementById('consolePanel');
 
     let recognition = null;
     let isListening = false;
     let finalTranscript = '';
 
+    function log(message, type = 'info') {
+      const line = document.createElement('div');
+      line.className = 'console-line';
+      if (type === 'error') line.classList.add('console-err');
+      if (type === 'success') line.classList.add('console-success');
+      line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      consolePanel.appendChild(line);
+      consolePanel.scrollTop = consolePanel.scrollHeight;
+    }
+
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (SpeechRecognition) {
+      log('SpeechRecognition supported! Web speech API detected.', 'success');
       recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
@@ -319,13 +361,19 @@
         statusText.classList.add('listening');
         statusText.textContent = 'Listening... Speak now';
         waves.classList.add('active');
+        log('Speech recording engine started.', 'success');
       };
+
+      recognition.onaudiostart = () => log('Audio capture started (mic is receiving sound).');
+      recognition.onsoundstart = () => log('Sound detected in input stream.');
+      recognition.onspeechstart = () => log('Speech detected.');
 
       recognition.onresult = (event) => {
         let interimTranscript = '';
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           if (event.results[i].isFinal) {
             finalTranscript += event.results[i][0].transcript + ' ';
+            log(`Final chunk: "${event.results[i][0].transcript}"`);
           } else {
             interimTranscript += event.results[i][0].transcript;
           }
@@ -345,6 +393,7 @@
 
       recognition.onerror = (event) => {
         console.error('Speech error:', event.error);
+        log(`Speech engine error: ${event.error}`, 'error');
         if (event.error === 'not-allowed') {
           statusText.textContent = '❌ Mic access denied';
         } else {
@@ -354,10 +403,12 @@
       };
 
       recognition.onend = () => {
+        log('Speech recording engine ended.');
         stopListening();
       };
     } else {
       statusText.textContent = '❌ Speech Recognition not supported';
+      log('Speech Recognition is NOT supported in this browser.', 'error');
       micBtn.disabled = true;
     }
 
@@ -365,8 +416,10 @@
       if (!recognition) return;
       finalTranscript = '';
       try {
+        log('Starting speech engine...');
         recognition.start();
       } catch (err) {
+        log(`Start failed: ${err.message}`, 'error');
         console.error(err);
       }
     }
@@ -381,8 +434,10 @@
 
     micBtn.addEventListener('click', () => {
       if (isListening) {
+        log('Stop button clicked.');
         recognition.stop();
       } else {
+        log('Mic button clicked.');
         startListening();
       }
     });
@@ -393,6 +448,7 @@
       clearBtn.disabled = true;
       sendBtn.disabled = true;
       statusText.textContent = 'Ready to record';
+      log('Cleared dictation buffer.');
     });
 
     sendBtn.addEventListener('click', () => {
@@ -401,11 +457,13 @@
         // Send back to Google Apps Script / parent window
         window.opener.postMessage({ type: 'SPEECH_RESULT', transcript: textToSend }, '*');
         statusText.textContent = '✅ Transmitted successfully!';
+        log('Transmitted transcript to app!', 'success');
         setTimeout(() => {
           window.close();
-        }, 1000);
+        }, 800);
       } else if (!window.opener) {
         statusText.textContent = '⚠️ Parent window not found';
+        log('Transmission failed: window.opener is missing.', 'error');
       }
     });
   </script>
