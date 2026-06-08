@@ -114,7 +114,7 @@ window.onunhandledrejection = (event: PromiseRejectionEvent) => {
 
 // ── Mount React with try-catch fallback ──────────────────────────────────────
 
-const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'dummy-client-id.apps.googleusercontent.com';
 
 try {
   const rootElement = document.getElementById('root');
