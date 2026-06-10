@@ -317,3 +317,24 @@ Running git pull or clasp push operations on the Tasks project resulted in merge
 3. Executed `git reset --hard origin/main` to cleanly synchronize the local HEAD with the remote repository. ⚙️🔄
 4. Re-applied the stashed changes and verified clean compilation and synchronization. 🏆🎉
 Resolution Status: ✅ Fully Resolved
+
+---
+
+📁 File Name / Reference: [Google Apps Script URL Fetch & Drive API Authorization Warning](file:///c:/Users/traik/_DOMINICAN_MAYAN_VAULT/📜APP SCRIPTZ/TOC-TABLE-OF-CONTENTS-GENERATOR/src/gas/Code.js)
+File Type: Log / Code / Configuration
+Record ID: TDB-017
+Date Processed: 2026-06-10
+Category / Tags: Software, Authentication, Google Apps Script, OAuth
+
+🛑 Issue Identified
+Deploying updated OAuth scopes in `appsscript.json` (such as `script.external_request` and `drive`) caused the TOC Styler Web App to fail on execution with a red permission alert: "Apps Script URL Fetch authorization required." 🛑👀
+- Google Apps Script does not auto-authorize new manifest scopes for active web app deployments. 🔒🚫
+- The developer must consent to these scopes. However, web app execution contexts (`USER_DEPLOYING`) do not display interactive OAuth permission dialogs directly in sandboxed iframes. ❌💻
+- Checking execution logs revealed `DriveApp` permission checks were also skipped due to a lack of active OAuth consent. 🔍🛡️
+
+✅ Resolution Applied
+1. Updated [src/gas/Code.js](file:///c:/Users/traik/_DOMINICAN_MAYAN_VAULT/📜APP SCRIPTZ/TOC-TABLE-OF-CONTENTS-GENERATOR/src/gas/Code.js) to add an `onOpen()` trigger function that registers a custom document menu item: **📜 TOC Styler** -> **🔑 Authorize Services** / **🖥️ Open Sidebar**. 🛠️✨
+2. Refactored the backend `forceAuth()` method to execute direct lightweight service calls (e.g. `DocumentApp.getActiveDocument()`, `DriveApp.getRootFolder()`, `UrlFetchApp.fetch()`) inside a secure try-catch block. 🔌🛡️
+3. When the user opens the bound Google Doc and triggers **🔑 Authorize Services** from the custom menu, the Document UI prompts them with Google's native interactive OAuth consent window, cleanly granting all required permissions. 🏆🎉
+4. Recompiled React frontend assets (`npm run build`), packaged base64-encoded bundles (`node build-gas.js`), and force pushed to Apps Script (`npx clasp push -f`), followed by a version 6 deployment update (`npx clasp deploy`). 🚀🌍
+Resolution Status: ✅ Fully Resolved (Pending user triggering custom menu authorization)
