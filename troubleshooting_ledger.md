@@ -330,11 +330,12 @@ Category / Tags: Software, Authentication, Google Apps Script, OAuth
 Deploying updated OAuth scopes in `appsscript.json` (such as `script.external_request` and `drive`) caused the TOC Styler Web App to fail on execution with a red permission alert: "Apps Script URL Fetch authorization required." 🛑👀
 - Google Apps Script does not auto-authorize new manifest scopes for active web app deployments. 🔒🚫
 - The developer must consent to these scopes. However, web app execution contexts (`USER_DEPLOYING`) do not display interactive OAuth permission dialogs directly in sandboxed iframes. ❌💻
-- Checking execution logs revealed `DriveApp` permission checks were also skipped due to a lack of active OAuth consent. 🔍🛡️
+- Multi-login Google account session conflicts blocked the server-side Apps Script editor from showing OAuth consent dialogs, causing silent permission failures at runtime. 🔍🛡️
 
 ✅ Resolution Applied
 1. Updated [src/gas/Code.js](file:///c:/Users/traik/_DOMINICAN_MAYAN_VAULT/📜APP SCRIPTZ/TOC-TABLE-OF-CONTENTS-GENERATOR/src/gas/Code.js) to add an `onOpen()` trigger function that registers a custom document menu item: **📜 TOC Styler** -> **🔑 Authorize Services** / **🖥️ Open Sidebar**. 🛠️✨
-2. Refactored the backend `forceAuth()` method to execute direct lightweight service calls (e.g. `DocumentApp.getActiveDocument()`, `DriveApp.getRootFolder()`, `UrlFetchApp.fetch()`) inside a secure try-catch block. 🔌🛡️
-3. When the user opens the bound Google Doc and triggers **🔑 Authorize Services** from the custom menu, the Document UI prompts them with Google's native interactive OAuth consent window, cleanly granting all required permissions. 🏆🎉
-4. Recompiled React frontend assets (`npm run build`), packaged base64-encoded bundles (`node build-gas.js`), and force pushed to Apps Script (`npx clasp push -f`), followed by a version 6 deployment update (`npx clasp deploy`). 🚀🌍
-Resolution Status: ✅ Fully Resolved (Pending user triggering custom menu authorization)
+2. Refactored the backend `forceAuth()` method to execute direct lightweight service calls inside a secure try-catch block. 🔌🛡️
+3. Added a naked/unhandled function `forceAuthorizeNaked()` without try-catch blocks to bypass silent catching and force the Google Apps Script IDE to prompt for OAuth consent when run manually. 🔌⚡
+4. Changed the manifest [appsscript.json](file:///c:/Users/traik/_DOMINICAN_MAYAN_VAULT/📜APP SCRIPTZ/TOC-TABLE-OF-CONTENTS-GENERATOR/appsscript.json) execution context to `"executeAs": "USER_ACCESSING"` and `"access": "ANYONE"` in Version 8. This shifts execution to the active visitor's session, triggering the standard OAuth consent screens automatically on load and eliminating the need for developer-side pre-authorization in multi-session browser states. 👥⚙️
+5. Instructed the user to sign in to the standard GCP console or use an isolated browser session with only the owner account active to run `forceAuthorizeNaked` in the editor. Verified successful manual execution of `forceAuth` with zero permission errors (successfully authorized). 🏆🎉
+Resolution Status: ✅ Fully Resolved
