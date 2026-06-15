@@ -241,25 +241,16 @@ function testQueryGemini() {
 // ─────────────────────────────────────────────
 
 /**
- * Fetches all Google Tasks lists using native script authentication.
+ * Fetches all Google Tasks lists using native script authentication via the Tasks Advanced Service.
+ * Bypasses UrlFetchApp and ScriptApp.getOAuthToken() to prevent multi-login session token errors.
  */
 function gasFetchTaskLists() {
-  console.log('📋 [gasFetchTaskLists] ENTRY');
-  var token = ScriptApp.getOAuthToken();
-  var url = 'https://tasks.googleapis.com/tasks/v1/users/@me/lists';
+  console.log('📋 [gasFetchTaskLists] ENTRY (Advanced Service)');
   try {
-    var response = UrlFetchApp.fetch(url, {
-      headers: { Authorization: 'Bearer ' + token },
-      muteHttpExceptions: true
-    });
-    var code = response.getResponseCode();
-    console.log('📋 [gasFetchTaskLists] HTTP response:', code);
-    if (code !== 200) {
-      throw new Error('API returned code ' + code + ': ' + response.getContentText());
-    }
-    var data = JSON.parse(response.getContentText());
-    console.log('✅ [gasFetchTaskLists] EXIT — listCount:', (data.items || []).length);
-    return { items: data.items || [] };
+    var taskLists = Tasks.Tasklists.list();
+    var lists = taskLists.items || [];
+    console.log('✅ [gasFetchTaskLists] EXIT — listCount:', lists.length);
+    return { items: lists };
   } catch (err) {
     console.error('🚨 [gasFetchTaskLists] ERROR:', err.message);
     return { error: err.message || 'Failed to fetch task lists.' };
@@ -267,27 +258,14 @@ function gasFetchTaskLists() {
 }
 
 /**
- * Creates a new task list.
+ * Creates a new task list using the native Tasks Advanced Service.
  */
 function gasCreateTaskList(title) {
   console.log('📋 [gasCreateTaskList] ENTRY — title:', title);
-  var token = ScriptApp.getOAuthToken();
-  var url = 'https://tasks.googleapis.com/tasks/v1/users/@me/lists';
   try {
-    var response = UrlFetchApp.fetch(url, {
-      method: 'post',
-      contentType: 'application/json',
-      headers: { Authorization: 'Bearer ' + token },
-      payload: JSON.stringify({ title: title }),
-      muteHttpExceptions: true
-    });
-    var code = response.getResponseCode();
-    console.log('📋 [gasCreateTaskList] HTTP response:', code);
-    if (code !== 200 && code !== 201) {
-      throw new Error('API returned code ' + code + ': ' + response.getContentText());
-    }
+    var newList = Tasks.Tasklists.insert({ title: title });
     console.log('✅ [gasCreateTaskList] EXIT — success');
-    return JSON.parse(response.getContentText());
+    return newList;
   } catch (err) {
     console.error('🚨 [gasCreateTaskList] ERROR:', err.message);
     return { error: err.message || 'Failed to create task list.' };
@@ -295,27 +273,14 @@ function gasCreateTaskList(title) {
 }
 
 /**
- * Inserts a single task into a task list.
+ * Inserts a single task into a task list using the native Tasks Advanced Service.
  */
 function gasInsertTask(listId, taskPayload) {
   console.log('📋 [gasInsertTask] ENTRY — listId:', listId);
-  var token = ScriptApp.getOAuthToken();
-  var url = 'https://tasks.googleapis.com/tasks/v1/lists/' + listId + '/tasks';
   try {
-    var response = UrlFetchApp.fetch(url, {
-      method: 'post',
-      contentType: 'application/json',
-      headers: { Authorization: 'Bearer ' + token },
-      payload: JSON.stringify(taskPayload),
-      muteHttpExceptions: true
-    });
-    var code = response.getResponseCode();
-    console.log('📋 [gasInsertTask] HTTP response:', code);
-    if (code !== 200 && code !== 201) {
-      throw new Error('API returned code ' + code + ': ' + response.getContentText());
-    }
+    var insertedTask = Tasks.Tasks.insert(taskPayload, listId);
     console.log('✅ [gasInsertTask] EXIT — success');
-    return JSON.parse(response.getContentText());
+    return insertedTask;
   } catch (err) {
     console.error('🚨 [gasInsertTask] ERROR:', err.message);
     return { error: err.message || 'Failed to insert task.' };
