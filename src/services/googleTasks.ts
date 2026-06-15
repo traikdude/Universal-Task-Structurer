@@ -74,7 +74,8 @@ export const fetchTaskLists = async (accessToken: string): Promise<TaskList[]> =
           .gasFetchTaskLists();
       });
     } catch (gasErr: any) {
-      console.warn('[Google Tasks] GAS proxy failed, falling back to REST API:', gasErr?.message);
+      console.error('[Google Tasks] GAS proxy failed:', gasErr?.message);
+      throw gasErr;
     }
   }
 
@@ -107,7 +108,8 @@ export const createTaskList = async (accessToken: string, title: string): Promis
           .gasCreateTaskList(title);
       });
     } catch (gasErr: any) {
-      console.warn('[Google Tasks] GAS createTaskList proxy failed, falling back:', gasErr?.message);
+      console.error('[Google Tasks] GAS createTaskList proxy failed:', gasErr?.message);
+      throw gasErr;
     }
   }
 
@@ -173,7 +175,8 @@ export const insertTask = async (
           .gasInsertTask(listId, payload);
       });
     } catch (gasErr: any) {
-      console.warn('[Google Tasks] GAS insertTask proxy failed, falling back:', gasErr?.message);
+      console.error('[Google Tasks] GAS insertTask proxy failed:', gasErr?.message);
+      throw gasErr;
     }
   }
 
