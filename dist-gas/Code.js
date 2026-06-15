@@ -304,3 +304,13 @@ function forceAuth() {
     console.error('⚠️ [forceAuth] ERROR (expected if no endpoint):', err.message);
   }
 }
+
+
+/**
+ * Revokes the script's OAuth token, forcing re-authorization on next run.
+ * Run this once, then run any other function to re-authorize with all scopes.
+ */
+function revokeAuth() {
+  ScriptApp.invalidateAuth();
+  console.log('Auth revoked. Run any function to re-authorize.');
+}
