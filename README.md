@@ -1,155 +1,66 @@
-<div align="center">
+![Loose notes and a whiteboard sketch flow through a brass clip into task cards with nested checkboxes.](assets/banner/banner.png)
 
-<img src="docs/assets/banner_sketchnote.png" alt="Universal Task Structurer Banner" width="100%">
+# ✅ Universal Task Structurer
 
-# **✅ Universal Task Structurer**
+Turn meeting notes, whiteboard photos, or a web page into a checklist you can review before sending it to Google Tasks. Gemini drafts the tasks. You choose the destination list, or take the result with you as Markdown, CSV, or plain text.
 
-**Turn messy notes, images, or URLs into perfectly structured Google Tasks using Gemini AI.**
+**📑 Contents** · [Features](#-features) · [Quick start](#-quick-start) · [Usage](#-usage) · [Deployment](#-deployment) · [Repository layout](#-repository-layout) · [Status and testing](#-status-and-testing)
 
-[![Status](https://img.shields.io/badge/status-stable-6B8E5A?style=flat-square)](https://img.shields.io/badge/status-stable-6B8E5A?style=flat-square)
-[![Version](https://img.shields.io/badge/version-1.7.0-C9A227?style=flat-square)](https://img.shields.io/badge/version-1.7.0-C9A227?style=flat-square)
-[![License](https://img.shields.io/badge/license-MIT-1B4965?style=flat-square)](https://github.com/traikdude/Universal-Task-Structurer/blob/main/LICENSE)
-[![Stack](https://img.shields.io/badge/stack-React%20%7C%20TypeScript-2B2B2B?style=flat-square)](https://img.shields.io/badge/stack-React%20%7C%20TypeScript-2B2B2B?style=flat-square)
-[![Last Commit](https://img.shields.io/github/last-commit/traikdude/Universal-Task-Structurer?style=flat-square&color=1B4965)](https://img.shields.io/github/last-commit/traikdude/Universal-Task-Structurer?style=flat-square&color=1B4965)
+## 🔆 Features
 
-</div>
+| From capture to checklist | How it works |
+| --- | --- |
+| 📷 Read a whiteboard or PDF | Drop an image for English OCR with Tesseract. For a PDF, the importer reads each page’s embedded text. Scanned PDF pages need a text layer or an image export. [File importer](src/components/MultiFileUpload.tsx) |
+| 🔗 Bring in a web page | Fetch a public URL to add its text and metadata to the input. The fetcher can use third-party proxies, so use public links. Pages that render entirely in JavaScript may yield little text. [URL importer](src/components/UrlInput.tsx) |
+| 🎙️ Dictate a note | Use speech recognition in a supported browser. The Apps Script flow offers a separate dictation window for microphone access. [Voice input](src/components/VoiceInput.tsx) · [Dictation page](public/voice.html) |
+| ✅ Structure and review | Gemini drafts task titles, priorities, due dates and subtasks. Review the cards and sort by priority in either light or dark mode. [Extraction instructions](src/constants/systemPrompt.ts) · [Workbench](src/App.tsx) |
+| 📤 Send or export | Choose or create a Google Tasks list and confirm the send. For a portable copy, use the export menu. [Tasks service](src/services/googleTasks.ts) · [Confirmation](src/components/SendConfirmationModal.tsx) · [Export menu](src/components/ExportDropdown.tsx) |
 
----
+## ⚡ Quick start
 
-## **✨ Overview**
+From the repository root, use Node.js and npm. For local development, set `VITE_GEMINI_API_KEY` in an untracked `.env.local`. To send tasks from the standalone app, also set `VITE_GOOGLE_CLIENT_ID` to your own web OAuth client ID, enable the Google Tasks API for that project, and authorize the local app’s origin.
 
-Universal Task Structurer is a professional, AI-powered task extraction workbench that simplifies your productivity flow. By leveraging Gemini's generative intelligence, the application parses raw notes, whiteboard screenshots, meeting transcripts, or dynamic web page URLs and converts them into structured checklist actions. The application integrates directly with Google Tasks, enabling you to organize your personal, academic, or professional to-do lists in seconds.
-
-## **📑 Table of Contents**
-
-* [Features](#-features)
-* [Visuals](#-visuals)
-* [Quick Start](#-quick-start)
-* [Installation](#-installation)
-* [Usage](#-usage)
-* [Configuration](#-configuration)
-* [Architecture](#-architecture)
-* [Roadmap](#-roadmap)
-* [Testing](#-testing)
-* [Contributing](#-contributing)
-* [License](#-license)
-
-## **🔆 Features**
-
-* **AI-Powered Task Extraction** — Leverages Gemini models to automatically structure unstructured texts into actionable check-items with deadlines, subtasks, and priority scores.
-* **Multimodal OCR Processing** — Drop whiteboards, handwritten lists, or PDFs directly onto the app interface to extract text magically.
-* **Resilient URL Scraping** — Scrapes external websites using a multi-proxy fallback mechanism (`corsproxy.io` -> `api.allorigins.win`) with dedicated title, metadata, and JSON-LD schema parsing.
-* **Direct Google Tasks Sync** — Authenticates with your Google account and exports structured cards directly into your official Google Tasks lists.
-* **Premium Theme Control** — Responsive dark and light themes utilizing custom Tailwind CSS v4 variables with high-contrast widescreen support.
-
-## **🖼️ Visuals**
-
-* **Live Demo (Vercel hosting):** [https://universal-task-structurer.vercel.app](https://universal-task-structurer.vercel.app)
-* **Google Apps Script Web App:** [https://script.google.com/macros/s/AKfycbzRCkuQUWi9FZ7UK2WSNk7nf0w0mEmPrNs9ArKYpIyDHfhMIubG1Zo5rl3ZDuCT00tN/exec](https://script.google.com/macros/s/AKfycbzRCkuQUWi9FZ7UK2WSNk7nf0w0mEmPrNs9ArKYpIyDHfhMIubG1Zo5rl3ZDuCT00tN/exec)
-
-## **⚡ Quick Start**
-
-To start the local development server immediately, run the following commands in your terminal:
-
-```bash
-git clone https://github.com/traikdude/Universal-Task-Structurer.git
-cd Universal-Task-Structurer
-npm install
+```powershell
+npm ci
 npm run dev
 ```
 
-Hold down **CTRL** and click the link displayed in the terminal (usually `http://localhost:3000/`) to open the local development workspace.
+Open the address Vite prints (the development script requests port 3000). Vite embeds browser-side settings in the client bundle. For a shared deployment that keeps the Gemini key on the server, use the Apps Script target below. [Package scripts](package.json) · [Gemini service](src/services/gemini.ts) · [OAuth setup](src/main.tsx)
 
-## **📦 Installation**
+## 🚀 Usage
 
-### **Prerequisites**
-* [Node.js](https://nodejs.org/) (v20 or higher recommended)
-* A [Gemini API Key](https://aistudio.google.com/)
+1. Paste a note such as “Prepare the workshop by Friday. Reserve the room and print the handouts.” You can also start with an example, dictate, drop a file, or fetch a public page.
+2. Select **⚡ Process Intelligence**. Check the proposed task breakdown and dates against the original note.
+3. Copy the checklist as Markdown, export it, or select a Google Tasks list and confirm the send.
 
-### **Local Setup**
-1. Clone this repository locally.
-2. In the project root, create a file named `.env.local` containing:
-   ```env
-   VITE_GEMINI_API_KEY=your_gemini_api_key_here
-   VITE_GOOGLE_CLIENT_ID=825046261103-bkjr44l689qt0s9m4v3bj8te681pui11.apps.googleusercontent.com
-   ```
-3. Run `npm install` followed by `npm run dev`.
+## 🏗️ Deployment
 
-### **Deploying Online (Vercel)**
-The application is pre-configured to deploy automatically on push. If setting up a fresh Vercel workspace:
-1. Link your GitHub repository in [Vercel](https://vercel.com).
-2. Configure your Environment Variables:
-   * `VITE_GEMINI_API_KEY` = *(your Gemini key)*
-   * `VITE_GOOGLE_CLIENT_ID` = `825046261103-bkjr44l689qt0s9m4v3bj8te681pui11.apps.googleusercontent.com`
-3. Click **Deploy**.
-4. **OAuth Configuration:** To enable Google Tasks sync online, go to your [Google Cloud Console Credentials](https://console.cloud.google.com/apis/credentials) and add your Vercel URL under "Authorized JavaScript origins" and "Authorized redirect URIs".
+| Target | Build and configure |
+| --- | --- |
+| Standalone web app | Run `npm run build` and serve the resulting `dist/` directory on a static host. Use `npm run preview` for a local look at the build. Configure the browser settings above for the deployment origin. [Vite config](vite.config.ts) |
+| Google Apps Script web app | Build without a browser Gemini key, then run `node build-gas.js`. It inlines the frontend and copies the server and manifest into `dist-gas/`. Deploy those files to **your own** Apps Script project as a web app. Set `GEMINI_API_KEY` in Script Properties and authorize the services declared in the manifest. The client calls server functions through `google.script.run`. [Builder](build-gas.js) · [Server](src/gas/Code.js) · [Manifest](appsscript.json) |
 
----
+## 🧭 Repository layout
 
-## **🚀 Usage**
+| Path | What lives there |
+| --- | --- |
+| [src/components](src/components) | React and TypeScript controls for capture, task cards, history, list selection and export |
+| [src/lib](src/lib) | Task processing helpers and their Vitest tests |
+| [src/services](src/services) | Gemini and Google Tasks adapters for the browser and Apps Script |
+| [src/index.css](src/index.css) | Tailwind CSS and theme styles |
+| [docs/releases](docs/releases) | Release notes, including the v1.9.0 dictation changes |
+| [assets/banner](assets/banner) | README art, editable vector alternative and social preview |
 
-### **Extracting Tasks from Web Pages**
-1. Open the application.
-2. Paste any article or dashboard URL (e.g. `https://www.slashgear.com/886590/how-to-install-apks-on-your-chromebook/`) into the **🔗 Extract from URL** input field.
-3. Click **⚡ Fetch**. TheParsed content will be appended into the text area.
-4. Click **⚡ Process Intelligence**. Gemini will output structured tasks grouped by checklist cards on the right.
-5. Click **📤 Send structured tasks to Google Tasks** to sync!
+## 🧪 Status and testing
 
----
+Recurring task schedules and selectable instruction profiles remain roadmap ideas. The extraction instructions live in [one system prompt](src/constants/systemPrompt.ts). See the [v1.9.0 release notes](docs/releases/universal-task-v1.9.0.md) for the documented dictation changes.
 
-## **⚙️ Configuration**
+After installing dependencies, run `npm run lint` for TypeScript checking and `npm test` for the [task-engine tests](src/lib/taskEngine.test.ts). Google sign-in, Gemini extraction and sending to a real task list require a configured environment for end-to-end testing.
 
-The following environment parameters are required for operation:
+## 🤝 Contributing
 
-| Option | Default | Description |
-| ----- | ----- | ----- |
-| `VITE_GEMINI_API_KEY` | *(None)* | Your active Gemini API authorization token |
-| `VITE_GOOGLE_CLIENT_ID` | `82504626...` | Google Client ID for OAuth Tasks integration |
+See the [contribution guide](CONTRIBUTING.md) for the project workflow.
 
----
+## 📄 License
 
-## **🏗️ Architecture**
-
-The project supports a dual-target architecture:
-1. **Single-Page Application (SPA):** A standard client-side React bundle optimized for Vercel deployment.
-2. **Google Apps Script Web App:** An inline, base64-encoded single-file bundle compiled via `build-gas.js`. In this mode, the client communicates directly with Google's backend APIs natively via `google.script.run` proxies, bypassing cross-origin blocks and authentication limitations.
-
----
-
-## **🗺️ Roadmap**
-
-* [x] Add dynamic metadata/schema scraping fallbacks for SPA dashboards.
-* [x] Implement multi-proxy failovers to bypass local CORS policies.
-* [x] Enable Tailwind CSS v4 selector-based dark mode theme switches.
-* [x] Establish CI workflows for linting and security scans.
-* [ ] Add automated task recurrence schedules. 🔜
-* [ ] Support multiple Gemini system instruction profile options. 🔜
-
----
-
-## **🧪 Testing**
-
-To execute the unit test suites:
-```bash
-npm run test
-```
-
----
-
-## **🤝 Contributing**
-
-Contributions are welcome! Please read our [CONTRIBUTING.md](CONTRIBUTING.md) for details on our coding standards and review processes.
-
----
-
-## **📄 License**
-
-This project is released under the MIT License. See [LICENSE](LICENSE) for the full text.
-
----
-
-<div align="center">
-
-🏛️ *Part of the Brigade* · Built by **Erik** · <sub>Forged with care</sub>
-
-</div>
+Released under the [MIT License](LICENSE).
